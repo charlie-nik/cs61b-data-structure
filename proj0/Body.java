@@ -8,7 +8,7 @@ public class Body {
 	public String imgFileName;
 
 	/** The gravitational constant G.*/
-	public static final double G = 6.67e-11
+	static final double G = 6.67e-11
 	;
 
 	public Body(double xP, double yP, double xV,
