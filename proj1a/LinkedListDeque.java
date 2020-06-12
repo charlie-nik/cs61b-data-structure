@@ -44,7 +44,9 @@ public class LinkedListDeque<T> {
      * @param item the value of the element to be added
      */
     public void addFirst(T item) {
-        sentinel.next = new LinkedList(item, sentinel, sentinel.next);;
+        LinkedList result = new LinkedList(item, sentinel, sentinel.next);
+        sentinel.prev = result;
+        result.prev.next = result;
         size += 1;
     }
 
@@ -53,7 +55,9 @@ public class LinkedListDeque<T> {
      * @param item the value of the element to be added.
      */
     public void addLast(T item) {
-        sentinel.prev = new LinkedList(item, sentinel.prev, sentinel);
+        LinkedList<T> result = new LinkedList(item, sentinel.prev, sentinel);
+        sentinel.prev = result;
+        result.prev.next = result;
         size += 1;
     }
 
