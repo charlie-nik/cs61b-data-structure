@@ -1,37 +1,35 @@
 public class ArrayDeque<T> {
 
-    /** field */
+    /* field */
     private T[] items;
     private int size;
     private int nextFirst = 0;
     private int nextLast = 1;
     private static final int RFACTOR = 2;
 
-    /**
-     * Construct an empty array deque.
-     */
+    /* Construct an empty array deque. */
     public ArrayDeque() {
         items = (T[]) new Object[8];
         size = 0;
     }
 
-    /**
-     * Construct a deep copy of another deque.
-     */
+    /* Construct a deep copy of another deque. */
     public ArrayDeque(ArrayDeque other) {
-        items = (T[]) new Object[other.size];
-        for (int i = 0; i < other.size; i++) {
+        items = (T[]) new Object[other.items.length];
+        nextLast = 0;
+        for (int i = 0; i < items.length; i++) {
             addLast((T) other.items[i]);
         }
+        nextFirst = other.nextFirst;
+        nextLast = other.nextLast;
+        size = other.size;
     }
 
-    /**
-     * Resize the list to target capacity.
-     */
+    /* Resize the list to target capacity. */
     private void resize(int capacity) {
         T[] temp = (T[]) new Object[capacity];
 
-        if (nextFirst < nextLast || nextLast == 0) {
+        if (nextFirst < nextLast - 1 || nextLast == 0) {
             System.arraycopy(items, nextFirst + 1, temp, 1, size);
         } else if (nextFirst == items.length - 1) {
                 System.arraycopy(items, 0, temp, 1, size);
@@ -45,9 +43,7 @@ public class ArrayDeque<T> {
         items = temp;
     }
 
-    /**
-     * Insert X into the front of the list.
-     */
+    /* Insert X into the front of the list. */
     public void addFirst(T x) {
         if (size == items.length) {
             resize(size * RFACTOR);
@@ -62,9 +58,7 @@ public class ArrayDeque<T> {
         }
     }
 
-    /**
-     * Insert X into the back of the list.
-     */
+    /* Insert X into the back of the list. */
     public void addLast(T x) {
         if (size == items.length) {
             resize(size * RFACTOR);
@@ -78,9 +72,7 @@ public class ArrayDeque<T> {
         }
     }
 
-    /**
-     * Remove and return the item at the front of the list.
-     */
+    /* Remove and return the item at the front of the list. */
     public T removeFirst() {
         T first;
         if (nextFirst == items.length - 1) {
@@ -92,7 +84,7 @@ public class ArrayDeque<T> {
         }
 
         size -= 1;
-        double usageRatio = size / items.length;
+        double usageRatio = (float) size / items.length;
         if (usageRatio < 0.25) {
             resize(items.length / 2);
         }
@@ -100,9 +92,7 @@ public class ArrayDeque<T> {
         return first;
     }
 
-    /**
-     * Remove and return the item at the back of the list.
-     */
+    /* Remove and return the item at the back of the list. */
     public T removeLast() {
         T last;
         if (nextLast == 0) {
@@ -114,7 +104,7 @@ public class ArrayDeque<T> {
         }
 
         size -= 1;
-        double usageRatio = size / items.length;
+        double usageRatio = (float) size / items.length;
         if (usageRatio < 0.25) {
             resize(items.length / 2);
         }
@@ -122,9 +112,7 @@ public class ArrayDeque<T> {
         return last;
     }
 
-    /**
-     * Get the i-th item in the list (constant time).
-     */
+    /* Get the i-th item in the list (constant time). */
     public T get(int index) {
         int realIndex = index + nextFirst + 1;
         if (realIndex >= items.length) {
@@ -133,9 +121,7 @@ public class ArrayDeque<T> {
         return items[realIndex];
     }
 
-    /**
-     * Return the number of element in the list.
-     */
+    /* Return the number of element in the list. */
     public int size() {
         return size;
     }
