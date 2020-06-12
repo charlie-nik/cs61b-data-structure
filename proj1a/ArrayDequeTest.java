@@ -1,7 +1,11 @@
 /** source: LinkedListDequeTest.java */
+
+import org.junit.Test;
+import org.junit.Assert.*;
+
 public class ArrayDequeTest {
 
-    /* Utility method for printing out empty checks. */
+    // Check size
     public static boolean checkSize(int expected, int actual) {
         if (expected != actual) {
             System.out.println("size() returned " + actual + ", but expected: " + expected);
