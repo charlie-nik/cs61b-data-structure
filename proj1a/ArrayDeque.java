@@ -125,4 +125,30 @@ public class ArrayDeque<T> {
     public int size() {
         return size;
     }
+
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
+    public void printDeque() {
+        if (nextFirst < nextLast - 1 || nextLast == 0) {
+            for (int i = nextFirst + 1; i < nextLast; i++) {
+                System.out.print(items[i] + " ");
+            }
+        } else if (nextFirst == items.length - 1) {
+            for (int i = 0; i < nextLast; i++) {
+                System.out.print(items[i] + " ");
+            }
+        } else {
+            int firstPart = items.length - nextFirst - 1;
+            for (int i = nextFirst + 1; i < items.length; i++) {
+                System.out.print(items[i] + " ");
+            }
+            for (int i = 0; i < nextLast; i++) {
+                System.out.print(items[i] + " ");
+            }
+        }
+
+        System.out.println();
+    }
 }
