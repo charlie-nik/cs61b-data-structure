@@ -32,10 +32,21 @@ public class TestPlip {
 
     @Test
     public void testReplicate() {
-        // TODO
+        Plip p1 = new Plip(2);
+        Plip p2 = p1.replicate();
+        assertNotEquals(p1, p2);
+        assertEquals(1.00, p1.energy(), 0.01);
+        assertEquals(1.00, p2.energy(), 0.01);
+        p1.move();
+        p1.move();
+        Plip p3 = p1.replicate();
+        assertNotEquals(p2, p3);
+        assertEquals(0.35, p1.energy(), 0.01);
+        assertEquals(0.35, p3.energy(), 0.01);
+
     }
 
-    //@Test
+    @Test
     public void testChoose() {
 
         // No empty adjacent spaces; stay.
