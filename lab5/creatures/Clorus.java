@@ -31,9 +31,9 @@ public class Clorus extends Creature {
      */
     public Clorus(double e) {
         super("clorus");
-        r = 34;
+        r = 0;
         g = 0;
-        b = 231;
+        b = 0;
         energy = e;
     }
 
@@ -45,6 +45,9 @@ public class Clorus extends Creature {
     }
 
     public Color color() {
+        r = 34;
+        g = 0;
+        b = 231;
         return new Color(r, g, b);
     }
 
