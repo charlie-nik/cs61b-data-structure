@@ -1,5 +1,8 @@
 /** A client that uses the synthesizer package to replicate a plucked guitar string sound */
+import edu.princeton.cs.algs4.StdAudio;
 import es.datastructur.synthesizer.GuitarString;
+
+import java.rmi.StubNotFoundException;
 
 public class GuitarHeroLite {
     private static final double CONCERT_A = 440.0;
@@ -34,4 +37,3 @@ public class GuitarHeroLite {
         }
     }
 }
-
