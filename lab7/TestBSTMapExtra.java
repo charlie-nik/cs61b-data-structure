@@ -1,3 +1,4 @@
+import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
 import static org.junit.Assert.*;
@@ -109,6 +110,83 @@ public class TestBSTMapExtra {
         assertTrue(((Integer) noChild.remove('Z')).equals(15));
         assertEquals(0, noChild.size());
         assertEquals(null, noChild.get('Z'));
+    }
+
+    /* Remove test (basics) */
+    @Test
+    public void testRemoveBasics() {
+        BSTMap<Integer, String> bst = new BSTMap<>();
+        bst.put(1, "a");
+
+        assertEquals(null, bst.remove(3));
+        assertEquals("a", bst.remove(1));
+        assertEquals(0, bst.size());
+        assertFalse(bst.containsKey(1));
+
+        bst.put(2, "b");
+        bst.put(1, "a");
+        bst.put(4, "d");
+        bst.put(3, "c");
+        bst.put(5, "e");
+
+        assertEquals("b", bst.remove(2));
+        assertEquals("d", bst.remove(4));
+        assertEquals(3, bst.size());
+        assertFalse(bst.containsKey(2));
+        assertFalse(bst.containsKey(4));
+        assertTrue(bst.containsKey(1));
+        assertTrue(bst.containsKey(3));
+        assertTrue(bst.containsKey(5));
+    }
+
+    /* Iterator test 1
+     * helper
+     */
+    @Test
+    public void testAllIsNull() {
+        BSTMap<Integer, String> bst = new BSTMap<>();
+        assertTrue(bst.allIsNull());
+
+        bst.put(2, "b");
+        bst.put(1, "a");
+        bst.put(4, "d");
+        bst.put(3, "c");
+        bst.put(5, "e");
+
+        bst.remove(3);
+        bst.remove(4);
+        bst.remove(5);
+        assertFalse(bst.allIsNull());
+
+        bst.remove(1);
+        bst.remove(2);
+        assertTrue(bst.allIsNull());
+    }
+
+    /* Iterator test 2
+     * the real deal
+     */
+    @Test
+    public void testIterator() {
+        BSTMap<Integer, String> bst = new BSTMap<>();
+        bst.put(2, "b");
+        bst.put(4, "d");
+        bst.put(5, "e");
+        bst.put(3, "c");
+        bst.put(1, "a");
+
+        Iterator<Integer> iter = bst.iterator();
+        assertTrue(iter.hasNext());
+        assertEquals(1, (int) iter.next());
+        assertEquals(2, (int) iter.next());
+        assertEquals(3, (int) iter.next());
+        assertEquals(4, (int) iter.next());
+        assertTrue(iter.hasNext());
+
+        assertEquals(5, bst.size());
+
+        assertEquals(5, (int) iter.next());
+        assertFalse(iter.hasNext());
     }
 
     public static void main(String[] args) {
