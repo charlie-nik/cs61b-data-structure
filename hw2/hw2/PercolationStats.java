@@ -55,4 +55,13 @@ public class PercolationStats {
         double stddev = stddev();
         return mean + (1.96 * stddev / (Math.sqrt(T)));
     }
+
+    /* for unit testing. */
+    public static void main(String[] args) {
+        PercolationStats ps = new PercolationStats(20, 30, new PercolationFactory());
+        System.out.println(ps.mean());
+        System.out.println(ps.stddev());
+        System.out.println(ps.confidenceLow());
+        System.out.println(ps.confidenceHigh());
+    }
 }
