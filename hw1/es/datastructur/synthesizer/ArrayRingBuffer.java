@@ -1,13 +1,11 @@
 package es.datastructur.synthesizer;
 import java.util.Iterator;
 
-class ArrayRingBuffer<T> implements BoundedQueue<T> {
+class ArrayRingBuffer<T> extends AbstractBoundedQueue<T> {
     /* Index for the next dequeue or peek. */
     private int first;
     /* Index for the next enqueue. */
     private int last;
-    /* Variable for the fillCount. */
-    private int fillCount;
     /* Array for storing the buffer data. */
     private T[] rb;
 
@@ -68,22 +66,6 @@ class ArrayRingBuffer<T> implements BoundedQueue<T> {
             throw new RuntimeException("Ring buffer underflow");
         }
         return rb[first];
-    }
-
-    /**
-     * Return the size of queue.
-     */
-    @Override
-    public int capacity() {
-        return rb.length;
-    }
-
-    /**
-     * /** Return the number of items currently in queue.
-     */
-    @Override
-    public int fillCount() {
-        return fillCount;
     }
 
     @Override
