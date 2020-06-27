@@ -139,33 +139,7 @@ public class TestBSTMapExtra {
         assertTrue(bst.containsKey(5));
     }
 
-    /* Iterator test 1
-     * helper
-     */
-    @Test
-    public void testAllIsNull() {
-        BSTMap<Integer, String> bst = new BSTMap<>();
-        assertTrue(bst.allIsNull());
-
-        bst.put(2, "b");
-        bst.put(1, "a");
-        bst.put(4, "d");
-        bst.put(3, "c");
-        bst.put(5, "e");
-
-        bst.remove(3);
-        bst.remove(4);
-        bst.remove(5);
-        assertFalse(bst.allIsNull());
-
-        bst.remove(1);
-        bst.remove(2);
-        assertTrue(bst.allIsNull());
-    }
-
-    /* Iterator test 2
-     * the real deal
-     */
+    /* Iterator test */
     @Test
     public void testIterator() {
         BSTMap<Integer, String> bst = new BSTMap<>();
