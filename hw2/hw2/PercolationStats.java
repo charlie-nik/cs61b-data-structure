@@ -26,7 +26,7 @@ public class PercolationStats {
                     count += 1;
                 }
             }
-            thresholds[i] = ((float) count) / N * N;
+            thresholds[i] = ((float) count) / (N * N);
         }
     }
 

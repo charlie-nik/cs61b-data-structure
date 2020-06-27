@@ -45,7 +45,8 @@ public class Percolation {
         if (row == 0) {
             grid.union(pos, virtualTop);
             backwashGrid.union(pos, virtualTop);
-        } else if (row == side - 1) {
+        }
+        if (row == side - 1) {
             grid.union(pos, virtualBottom);
         }
 
