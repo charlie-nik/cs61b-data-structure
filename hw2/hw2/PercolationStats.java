@@ -10,7 +10,7 @@ public class PercolationStats {
 
     /* Perform T independent experiments on an N-by-N grid. */
     public PercolationStats(int N, int T, PercolationFactory pf) {
-        if (N <=0 || T <= 0) {
+        if (N <= 0 || T <= 0) {
             throw new java.lang.IllegalArgumentException();
         }
         this.T = T;

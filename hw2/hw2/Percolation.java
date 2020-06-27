@@ -4,13 +4,13 @@ import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 public class Percolation {
 
-    WeightedQuickUnionUF grid;
+    private WeightedQuickUnionUF grid;
     /* the size of the grid. */
-    int side;
+    private int side;
     /* the number of open sites. */
-    int openSitesNum;
+    private int openSitesNum;
     /* an array of sites, true if open, false if closed. */
-    boolean[][] openSitesArray;
+    private boolean[][] openSitesArray;
     /* a virtual top site connected to all open sites in top row. */
     private int virtualTop;
     /* a virtual bottom site connected to all open sites in bottom row. */
@@ -88,15 +88,19 @@ public class Percolation {
     }
 
     /* Throw exception if the given argument is outside the prescribed range. */
-    protected void validate(int row, int col) {
+    private void validate(int row, int col) {
         if (row < 0 || row >= side || col < 0 || col >= side) {
             throw new java.lang.IndexOutOfBoundsException();
         }
     }
 
     /* Translate a two-argument site into a one-argument one. */
-    protected int xyTo1D(int row, int col) {
+    private int xyTo1D(int row, int col) {
         return row * side + col;
+    }
+
+    /* for testing purpose. */
+    public static void main(String[] args) {
     }
 
 }
