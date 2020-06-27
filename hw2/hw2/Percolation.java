@@ -5,6 +5,8 @@ import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 public class Percolation {
 
     private WeightedQuickUnionUF grid;
+    /* employ a second WQUUF in order to avoid backwash. */
+    private WeightedQuickUnionUF backwashGrid;
     /* the size of the grid. */
     private int side;
     /* the number of open sites. */
@@ -23,6 +25,7 @@ public class Percolation {
         }
 
         grid = new WeightedQuickUnionUF(N * N + 2);
+        backwashGrid = new WeightedQuickUnionUF(N * N + 1);
         side = N;
         openSitesNum = 0;
         openSitesArray = new boolean[N][N];
@@ -41,6 +44,7 @@ public class Percolation {
         // if the site is in top or bottom row, connect it to the corresponding virtual site.
         if (row == 0) {
             grid.union(pos, virtualTop);
+            backwashGrid.union(pos, virtualTop);
         } else if (row == side - 1) {
             grid.union(pos, virtualBottom);
         }
@@ -48,15 +52,19 @@ public class Percolation {
         // if the site's top, bottom, left, right sites are open, connect it to them.
         if (row > 0 && isOpen(row - 1, col)) {
             grid.union(pos, pos - side);
+            backwashGrid.union(pos, pos - side);
         }
         if (col > 0 && isOpen(row, col - 1)) {
             grid.union(pos, pos - 1);
+            backwashGrid.union(pos, pos - 1);
         }
         if (row < side - 1 && isOpen(row + 1, col)) {
             grid.union(pos, pos + side);
+            backwashGrid.union(pos, pos + side);
         }
         if (col < side - 1 && isOpen(row, col + 1)) {
             grid.union(pos, pos + 1);
+            backwashGrid.union(pos, pos + 1);
         }
 
         // increment openSitesNum and update openSitesArray accordingly.
@@ -74,7 +82,7 @@ public class Percolation {
     public boolean isFull(int row, int col) {
         validate(row, col);
         int pos = xyTo1D(row, col);
-        return grid.connected(pos, virtualTop);
+        return backwashGrid.connected(pos, virtualTop);
     }
 
     /* Return the number of open sites. */
