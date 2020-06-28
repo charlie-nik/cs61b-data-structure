@@ -16,11 +16,11 @@ public class ArrayDeque<T> implements Deque<T> {
 
     /* Constructs a deep copy of another deque. */
     public ArrayDeque(ArrayDeque<T> other) {
-        this();
-        for (int i = 0; i < size; i++) {
-            addLast(other.get(i));
-        }
-        // FIXME
+        items = (T[]) new Object[other.items.length];
+        System.arraycopy(other.items, 0, items, 0, items.length);
+        size = other.size;
+        nextFirst = other.nextFirst;
+        nextLast = other.nextLast;
     }
 
     /* Resizes the list to target capacity. */
