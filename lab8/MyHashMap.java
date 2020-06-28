@@ -25,10 +25,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         size = 0;
         capacity = INIT_CAPACITY;
         loadFactor = 0.75;
-        chains = new LinkedList[capacity];
-        for (int i = 0; i < capacity; i++) {
-            chains[i] = new LinkedList<>();
-        }
+        initialize();
     }
 
     /* Creates an empty map with the specified initial capacity. */
@@ -36,10 +33,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         size = 0;
         capacity = initialSize;
         loadFactor = 0.75;
-        chains = new LinkedList[capacity];
-        for (int i = 0; i < capacity; i++) {
-            chains[i] = new LinkedList<>();
-        }
+        initialize();
     }
 
     /* Creates an empty map with the specified initial capacity
@@ -48,6 +42,11 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         size = 0;
         capacity = initialSize;
         this.loadFactor = loadFactor;
+        initialize();
+    }
+
+    /* Creates an array of chains. */
+    private void initialize() {
         chains = new LinkedList[capacity];
         for (int i = 0; i < capacity; i++) {
             chains[i] = new LinkedList<>();
@@ -84,7 +83,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     /* Returns true if this map contains a mapping for the specified key. */
     @Override
     public boolean containsKey(K key) {
-        if (key == null) throw new IllegalArgumentException("argument to contains() is null");
+        if (key == null) throw new IllegalArgumentException("argument to containsKey() is null");
         return get(key) != null;
     }
 
@@ -92,7 +91,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
      * map contains no mapping for the key. */
     @Override
     public V get(K key) {
-        if (key == null) throw new IllegalArgumentException("argument to contains() is null");
+        if (key == null) throw new IllegalArgumentException("argument to get() is null");
         int index = hash(key);
         for (Pair p : chains[index]) {
             if (p.key.equals(key)) {
@@ -114,7 +113,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
      */
     @Override
     public void put(K key, V value) {
-        if (key == null) throw new IllegalArgumentException("argument to contains() is null");
+        if (key == null) throw new IllegalArgumentException("first argument to put() is null");
         if (value == null) {
             remove(key);
             return;
@@ -151,7 +150,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
      * UnsupportedOperationException. */
     @Override
     public V remove(K key) {
-        if (key == null) throw new IllegalArgumentException("argument to contains() is null");
+        if (key == null) throw new IllegalArgumentException("argument to remove() is null");
         int index = hash(key);
         for (Pair p : chains[index]) {
             if (p.key.equals(key)) {
@@ -169,7 +168,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
      * throw an UnsupportedOperationException. */
     @Override
     public V remove(K key, V value) {
-        if (key == null) throw new IllegalArgumentException("argument to contains() is null");
+        if (key == null) throw new IllegalArgumentException("first argument to remove() is null");
         int index = hash(key);
         for (Pair p : chains[index]) {
             if (p.key.equals(key) && p.value.equals(value)) {
