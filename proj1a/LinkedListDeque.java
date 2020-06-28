@@ -1,5 +1,3 @@
-import java.awt.desktop.AppReopenedEvent;
-
 public class LinkedListDeque<T> implements Deque<T> {
 
     private static class LinkedList<T> {
