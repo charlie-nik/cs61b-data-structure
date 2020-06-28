@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 /**
  * A String-like class that allows users to add and remove characters in the String
  * in constant time and have a constant-time hash function. Used for the Rabin-Karp
@@ -9,13 +11,15 @@ class RollingString{
      * Number of total possible int values a character can take on.
      * DO NOT CHANGE THIS.
      */
-    static final int UNIQUECHARS = 128;
+    static final int UNIQUE_CHARS = 128;
 
     /**
      * The prime base that we are using as our mod space. Happens to be 61B. :)
      * DO NOT CHANGE THIS.
      */
-    static final int PRIMEBASE = 6113;
+    static final int PRIME_BASE = 6113;
+
+    private ArrayList<Character> pseudoString;
 
     /**
      * Initializes a RollingString with a current value of String s.
@@ -23,7 +27,10 @@ class RollingString{
      */
     public RollingString(String s, int length) {
         assert(s.length() == length);
-        /* FIX ME */
+        pseudoString = new ArrayList<>();
+        for (int i = 0; i < s.length(); i++) {
+            pseudoString.add(s.charAt(i));
+        }
     }
 
     /**
@@ -32,7 +39,9 @@ class RollingString{
      * Should be a constant-time operation.
      */
     public void addChar(char c) {
-        /* FIX ME */
+        if (c > UNIQUE_CHARS) throw new IllegalArgumentException();
+        pseudoString.remove(0);
+        pseudoString.add(c);
     }
 
 
@@ -43,8 +52,10 @@ class RollingString{
      */
     public String toString() {
         StringBuilder strb = new StringBuilder();
-        /* FIX ME */
-        return "";
+        for (int c : pseudoString) {
+            strb.append(c);
+        }
+        return strb.toString();
     }
 
     /**
@@ -52,8 +63,7 @@ class RollingString{
      * Should be a constant-time operation.
      */
     public int length() {
-        /* FIX ME */
-        return -1;
+        return pseudoString.size();
     }
 
 
@@ -64,8 +74,12 @@ class RollingString{
      */
     @Override
     public boolean equals(Object o) {
-        /* FIX ME */
-        return false;
+        if (o == null) return false;
+        if (o == this) return true;
+        if (o.getClass() != this.getClass()) return false;
+
+        RollingString other = (RollingString) o;
+        return other.toString().equals(toString());
     }
 
     /**
@@ -74,7 +88,11 @@ class RollingString{
      */
     @Override
     public int hashCode() {
-        /* FIX ME */
-        return -1;
+        int hashCode = 0;
+        for (char c : pseudoString) {
+            hashCode *= UNIQUE_CHARS;
+            hashCode += c;
+        }
+        return hashCode % PRIME_BASE;
     }
 }
