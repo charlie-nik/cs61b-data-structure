@@ -1,38 +1,36 @@
-public class ArrayDeque<T> {
+public class ArrayDeque<T> implements Deque<T> {
 
     /* field */
+    private static final int INIT_CAPACITY = 8;
     private T[] items;
     private int size;
     private int nextFirst = 0;
     private int nextLast = 1;
     private static final int RFACTOR = 2;
 
-    /* Construct an empty array deque. */
+    /* Constructs an empty array deque. */
     public ArrayDeque() {
-        items = (T[]) new Object[8];
+        items = (T[]) new Object[INIT_CAPACITY];
         size = 0;
     }
 
-    /* Construct a deep copy of another deque. */
-    public ArrayDeque(ArrayDeque other) {
-        items = (T[]) new Object[other.items.length];
-        nextLast = 0;
-        for (int i = 0; i < items.length; i++) {
-            addLast((T) other.items[i]);
+    /* Constructs a deep copy of another deque. */
+    public ArrayDeque(ArrayDeque<T> other) {
+        this();
+        for (int i = 0; i < size; i++) {
+            addLast(other.get(i));
         }
-        nextFirst = other.nextFirst;
-        nextLast = other.nextLast;
-        size = other.size;
+        // FIXME
     }
 
-    /* Resize the list to target capacity. */
+    /* Resizes the list to target capacity. */
     private void resize(int capacity) {
         T[] temp = (T[]) new Object[capacity];
 
         if (nextFirst < nextLast - 1 || nextLast == 0) {
             System.arraycopy(items, nextFirst + 1, temp, 1, size);
         } else if (nextFirst == items.length - 1) {
-                System.arraycopy(items, 0, temp, 1, size);
+            System.arraycopy(items, 0, temp, 1, size);
         } else {
             int firstPart = items.length - nextFirst - 1;
             System.arraycopy(items, nextFirst + 1, temp, 1, firstPart);
@@ -43,13 +41,15 @@ public class ArrayDeque<T> {
         items = temp;
     }
 
-    /* Insert X into the front of the list. */
-    public void addFirst(T x) {
+    /* Inserts X into the front of the deque. */
+    @Override
+    public void addFirst(T item) {
+        // double list length if full
         if (size == items.length) {
             resize(size * RFACTOR);
         }
 
-        items[nextFirst] = x;
+        items[nextFirst] = item;
         size += 1;
         if (nextFirst == 0) {
             nextFirst = items.length - 1;
@@ -58,12 +58,15 @@ public class ArrayDeque<T> {
         }
     }
 
-    /* Insert X into the back of the list. */
-    public void addLast(T x) {
+    /* Inserts item into the back of the deque. */
+    @Override
+    public void addLast(T item) {
+        // double list length if full
         if (size == items.length) {
             resize(size * RFACTOR);
         }
-        items[nextLast] = x;
+
+        items[nextLast] = item;
         size += 1;
         if (nextLast == items.length - 1) {
             nextLast = 0;
@@ -72,8 +75,14 @@ public class ArrayDeque<T> {
         }
     }
 
-    /* Remove and return the item at the front of the list. */
+    /* Removes and returns the item at the front of the deque.
+     * If no such item exists, returns null. */
+    @Override
     public T removeFirst() {
+        if (isEmpty()) {
+            return null;
+        }
+
         T first;
         if (nextFirst == items.length - 1) {
             first = items[0];
@@ -82,18 +91,25 @@ public class ArrayDeque<T> {
             first = items[nextFirst + 1];
             nextFirst += 1;
         }
-
         size -= 1;
-        double usageRatio = (float) size / items.length;
-        if (usageRatio < 0.25 && items.length > 8) {
+
+        // halve list if less than 25% full
+        double usageRatio = ((float) size) / items.length;
+        if (items.length > INIT_CAPACITY && usageRatio < 0.25) {
             resize(items.length / 2);
         }
 
         return first;
     }
 
-    /* Remove and return the item at the back of the list. */
+    /* Removes and returns the item at the end of the deque.
+     * If no such item exists, returns null. */
+    @Override
     public T removeLast() {
+        if (isEmpty()) {
+            return null;
+        }
+
         T last;
         if (nextLast == 0) {
             last = items[items.length - 1];
@@ -102,18 +118,28 @@ public class ArrayDeque<T> {
             last = items[nextLast - 1];
             nextLast -= 1;
         }
-
         size -= 1;
-        double usageRatio = (float) size / items.length;
-        if (usageRatio < 0.25 && items.length > 8) {
+
+        // halve list if less than 25% full
+        double usageRatio = ((float) size) / items.length;
+        if (items.length > INIT_CAPACITY && usageRatio < 0.25) {
             resize(items.length / 2);
         }
 
         return last;
     }
 
-    /* Get the i-th item in the list (constant time). */
+    /* Returns the item at the given index.
+     * If no such item exists, returns null. */
+    @Override
     public T get(int index) {
+        if (isEmpty()) {
+            return null;
+        }
+        if (index < 0 || index >= size()) {
+            throw new IllegalArgumentException();
+        }
+
         int realIndex = index + nextFirst + 1;
         if (realIndex >= items.length) {
             realIndex = realIndex - items.length;
@@ -121,15 +147,13 @@ public class ArrayDeque<T> {
         return items[realIndex];
     }
 
-    /* Return the number of element in the list. */
+    /* Returns the number of element in the deque. */
+    @Override
     public int size() {
         return size;
     }
 
-    public boolean isEmpty() {
-        return size == 0;
-    }
-
+    @Override
     public void printDeque() {
         if (nextFirst < nextLast - 1 || nextLast == 0) {
             for (int i = nextFirst + 1; i < nextLast; i++) {

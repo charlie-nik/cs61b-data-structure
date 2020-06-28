@@ -1,8 +1,5 @@
 /** source: LinkedListDequeTest.java */
 
-import org.junit.Test;
-import org.junit.Assert.*;
-
 public class ArrayDequeTest {
 
     // Check size
@@ -116,25 +113,23 @@ public class ArrayDequeTest {
         printTestStatus("removeLast()", passed5);
         System.out.println();
 
-        if (passed4 && passed5) {
-            return true;
-        } else {
-            return false;
-        }
-
+        return passed4 && passed5;
     }
 
     public static void deepCopyTest(ArrayDeque other) {
 
         System.out.println("########## Running deepCopy() test ##########");
 
-        // I have to change <items> to "public" in order to run this test. I've changed it back now.
+
+        /* Change <items> in ArrayDeque to "public"
+         * otherwise these codes won't compile.
         ArrayDeque ad3 = new ArrayDeque<>(other);
         boolean passed6 = true;
         for (int i = 0; i < ad3.items.length; i++) {
             passed6 = ad3.get(i) == other.get(i) && passed6;
         }
         printTestStatus("deepCopy()", passed6);
+         */
 
     }
 
