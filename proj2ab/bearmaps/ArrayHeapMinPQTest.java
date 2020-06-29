@@ -13,6 +13,14 @@ import static org.junit.Assert.*;
 public class ArrayHeapMinPQTest {
 
     @Test
+    public void testFunctionality() {
+        testBasics();
+        testPriorityOrder();
+        testChangePriority();
+        testRandom();
+    }
+
+    @Test
     public void testBasics() {
         ArrayHeapMinPQ<Character> pq = new ArrayHeapMinPQ<>();
 

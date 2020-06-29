@@ -6,12 +6,6 @@ import java.util.NoSuchElementException;
 
 public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
 
-    private static final int INIT_CAPACITY = 4;
-    private Node[] queue;                       // array of item-priority pair at indices 1 to size
-    private final Map<T, Integer> keys;         // hash map of items and indices
-    private int size;                           // number of items in queue
-    private boolean verify = false;             // whether to verify isMinHeap()
-
     // helper class to pair together each item and its priority
     private class Node {
         private final T item;
@@ -21,6 +15,14 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
             this.priority = priority;
         }
     }
+
+    private static final int INIT_CAPACITY = 4;
+    private static final int RESIZE_FACTOR = 2;
+    private static final double SHRINK_LIMIT = 0.75;
+
+    private Node[] queue;                       // array of item-priority pairs at indices 1 to size
+    private final Map<T, Integer> keys;         // hashMap of items and their indices
+    private int size;                           // number of items in queue
 
     /* Creates an empty priority queue with the default initial capacity. */
     public ArrayHeapMinPQ() {
@@ -38,26 +40,15 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
      * IllegalArgumentException if item is already present. */
     @Override
     public void add(T item, double priority) {
-        if (item == null) {
-            throw new IllegalArgumentException("First argument to add() is null");
-        }
-        if (contains(item)) {
-            throw new IllegalArgumentException("Item already exists");
-        }
+        if (item == null) throw new IllegalArgumentException("First argument to add() is null");
+        if (contains(item)) throw new IllegalArgumentException("Item already exists");
 
-        // double array size if full
-        if (size == queue.length - 1) {
-            resize(queue.length * 2);
-        }
+        // resize if necessary
+        if (size == queue.length - 1) resize(queue.length * RESIZE_FACTOR);
 
         // add item to end of queue
         queue[++size] = new Node(item, priority);
-        if (isEmpty()) {
-            keys.put(item, size);
-        } else {
-            keys.put(item, swim(size));
-        }
-        assert !verify || isMinHeap();
+        keys.put(item, swim(size));
     }
 
     /* Returns true if the PQ contains the given item. */
@@ -69,22 +60,18 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
     /* Returns the minimum item. Throws NoSuchElementException if the PQ is empty. */
     @Override
     public T getSmallest() {
-        if (isEmpty()) {
-            throw new NoSuchElementException("Priority queue underflow");
-        }
+        if (isEmpty()) throw new NoSuchElementException("Priority queue underflow");
         return queue[1].item;
     }
 
     /* Removes and returns the minimum item. Throws NoSuchElementException if the PQ is empty. */
     @Override
     public T removeSmallest() {
-        if (isEmpty()) {
-            throw new NoSuchElementException("Priority queue underflow");
-        }
+        if (isEmpty()) throw new NoSuchElementException("Priority queue underflow");
 
-        // halve array size if 3/4 empty or more
-        if (queue.length > INIT_CAPACITY && size * 4 < queue.length) {
-            resize(queue.length / 2);
+        // resize if necessary
+        if (queue.length > INIT_CAPACITY && ((double) size) / queue.length < (1 - SHRINK_LIMIT)) {
+            resize(queue.length / RESIZE_FACTOR);
         }
 
         T result = queue[1].item;
@@ -92,7 +79,6 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
         queue[size--] = null;  // remove the last item to avoid loitering
         sink(1);         // let the new top sink to its lawful place
         keys.remove(result);
-        assert !verify || isMinHeap();
         return result;
     }
 
@@ -107,9 +93,8 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
     @Override
     public void changePriority(T item, double priority) {
         int index = keys.get(item);
-        if (index < 0) {
-            throw new NoSuchElementException("Item is not in priority queue");
-        }
+        if (index < 0) throw new NoSuchElementException("Item is not in priority queue");
+
         queue[index].priority = priority;
         index = swim(index);
         index = sink(index);
@@ -133,12 +118,8 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
     private int sink(int index) {
         while (index * 2 <= size) {
             int child = index * 2;
-            if (child < size && greater(child, child + 1)) {
-                child++;
-            }
-            if (!greater(index, child)) {
-                break;
-            }
+            if (child < size && greater(child, child + 1)) child++;
+            if (!greater(index, child)) break;
             swap(index, child);
             index = child;
         }
@@ -173,7 +154,4 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
         queue = temp;
     }
 
-    private boolean isMinHeap() {
-        return false;
-    }
 }
