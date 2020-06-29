@@ -106,7 +106,8 @@ public class KDTree implements PointSet {
      ***************************************************************************/
 
     private boolean withinRange(Point p, double[] range) {
-        return p.getX() >= range[0] && p.getX() <= range[1] && p.getY() >= range[2] && p.getY() <= range[3];
+        return p.getX() >= range[0] && p.getX() <= range[1]
+                && p.getY() >= range[2] && p.getY() <= range[3];
     }
 
     private void rangeFinding(Node n, List<Point> collected, double[] range) {

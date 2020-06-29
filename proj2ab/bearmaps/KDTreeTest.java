@@ -3,7 +3,6 @@ package bearmaps;
 import edu.princeton.cs.algs4.Stopwatch;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -16,8 +15,8 @@ public class KDTreeTest {
     public void testRandomNearest() {
         int N = 10000;      // size of universe
         int M = 10000;      // number of tests
-        List<Point> universe = randomPoints(N);
-        List<Point> testPoints = randomPoints(M);
+        List<Point> universe = TestTreeHelper.randomPoints(N);
+        List<Point> testPoints = TestTreeHelper.randomPoints(M);
 
         NaivePointSet naive = new NaivePointSet(universe);
         KDTree realDeal = new KDTree(universe);
@@ -32,8 +31,8 @@ public class KDTreeTest {
     public void compareNearestRuntime() {
         int N = 100_000;
         int M = 10_000;
-        List<Point> universe = randomPoints(N);
-        List<Point> testPoints = randomPoints(M);
+        List<Point> universe = TestTreeHelper.randomPoints(N);
+        List<Point> testPoints = TestTreeHelper.randomPoints(M);
 
         Random r = new Random();
 
@@ -56,8 +55,8 @@ public class KDTreeTest {
     public void testRandomRangeFinding() {
         int N = 10000;
         int M = 10000;
-        List<Point> universe = randomPoints(N);
-        List<double[]> ranges = randomRanges(M);
+        List<Point> universe = TestTreeHelper.randomPoints(N);
+        List<double[]> ranges = TestTreeHelper.randomRanges(M);
 
         NaivePointSet naive = new NaivePointSet(universe);
         KDTree realDeal = new KDTree(universe);
@@ -78,8 +77,8 @@ public class KDTreeTest {
     public void compareRangeFindingRuntime() {
         int N = 100_000;
         int M = 10_000;
-        List<Point> universe = randomPoints(N);
-        List<double[]> ranges = randomRanges(M);
+        List<Point> universe = TestTreeHelper.randomPoints(N);
+        List<double[]> ranges = TestTreeHelper.randomRanges(M);
 
         NaivePointSet naive = new NaivePointSet(universe);
         Stopwatch sw = new Stopwatch();
@@ -94,31 +93,5 @@ public class KDTreeTest {
             realDeal.rangeFinding(range);
         }
         System.out.println("K-d tree: " + sw.elapsedTime() + " seconds.");
-    }
-
-    private static ArrayList<Point> randomPoints(int N) {
-        Random r = new Random();
-        ArrayList<Point> points = new ArrayList<>();
-        for (int i = 0; i < N; i++) {
-            points.add(new Point(r.nextDouble(), r.nextDouble()));
-        }
-        return points;
-    }
-
-    private static ArrayList<double[]> randomRanges(int M) {
-        Random r = new Random();
-        ArrayList<double[]> ranges = new ArrayList<>();
-        for (int i = 0; i < M; i++) {
-            double left = r.nextDouble();
-            double right = r.nextDouble();
-            while (right < left) right = r.nextDouble();
-
-            double bottom = r.nextDouble();
-            double top = r.nextDouble();
-            while (top < bottom) top = r.nextDouble();
-
-            ranges.add(new double[]{left, right, bottom, top});
-        }
-        return ranges;
     }
 }

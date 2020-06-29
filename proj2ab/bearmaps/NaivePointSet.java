@@ -28,11 +28,10 @@ public class NaivePointSet implements PointSet {
     /* Returns a list of points within the given range. */
     @Override
     public List<Point> rangeFinding(double[] range) {
-        assert range[0] <= range[1] && range[2] <= range[3];
-
         List<Point> collected = new ArrayList<>();
         for (Point p : universe) {
-            if (p.getX() >= range[0] && p.getX() <= range[1] && p.getY() >= range[2] && p.getY() <= range[3]) {
+            if (p.getX() >= range[0] && p.getX() <= range[1]
+                    && p.getY() >= range[2] && p.getY() <= range[3]) {
                 collected.add(p);
             }
         }
