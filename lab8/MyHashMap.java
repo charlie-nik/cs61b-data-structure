@@ -17,7 +17,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     private static final int INIT_CAPACITY = 16;
     private final double loadFactor;
     private int size;                               // number of items in map
-    private int capacity;                           // length of chains
+    private int capacity;                           // number of chains
     private LinkedList<Pair>[] chains;              // array of external chaining
 
     /* Creates an empty map. */
