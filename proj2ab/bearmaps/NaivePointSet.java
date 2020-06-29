@@ -1,14 +1,15 @@
 package bearmaps;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class NaivePointSet implements PointSet {
 
-    private List<Point> points;
+    private List<Point> universe;
 
     /* Constructor. */
     public NaivePointSet(List<Point> points) {
-        this.points = points;
+        this.universe = points;
     }
 
     /* Returns the closest point to the inputted coordinates. */
@@ -16,11 +17,25 @@ public class NaivePointSet implements PointSet {
     public Point nearest(double x, double y) {
         Point target = new Point(x, y);
         Point result = new Point(Double.MAX_VALUE, Double.MAX_VALUE);
-        for (Point p : points) {
+        for (Point p : universe) {
             if (Point.distance(p, target) < Point.distance(result, target)) {
                 result = p;
             }
         }
         return result;
+    }
+
+    /* Returns a list of points within the given range. */
+    @Override
+    public List<Point> rangeFinding(double[] range) {
+        assert range[0] <= range[1] && range[2] <= range[3];
+
+        List<Point> collected = new ArrayList<>();
+        for (Point p : universe) {
+            if (p.getX() >= range[0] && p.getX() <= range[1] && p.getY() >= range[2] && p.getY() <= range[3]) {
+                collected.add(p);
+            }
+        }
+        return collected;
     }
 }

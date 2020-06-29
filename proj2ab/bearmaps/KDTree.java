@@ -1,5 +1,6 @@
 package bearmaps;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class KDTree implements PointSet {
     }
 
     /* Returns the closest point to the inputted coordinates.
-     * Should be in O(log N) time. */
+     * Should take O(log N) time. */
     @Override
     public Point nearest(double x, double y) {
         Point target = new Point(x, y);
@@ -38,8 +39,17 @@ public class KDTree implements PointSet {
         return nearest(root, target, result);
     }
 
+    /* Returns a list of points within the given range.
+     * Should take O(log N) time. */
+    @Override
+    public List<Point> rangeFinding(double[] range) {
+        List<Point> collected = new ArrayList<>();
+        rangeFinding(root, collected, range);
+        return collected;
+    }
+
     /***************************************************************************
-     * Helper functions.
+     * Helper functions for construction.
      ***************************************************************************/
 
     private Node growTree(Node n, Point p, boolean dimension) {
@@ -53,14 +63,20 @@ public class KDTree implements PointSet {
         return n;
     }
 
+    /***************************************************************************
+     * Helper functions for nearest().
+     ***************************************************************************/
+
     private int compare(Point p1, Point p2, boolean dimension) {
         if (dimension) return Double.compare(p1.getX(), p2.getX());
         else return Double.compare(p1.getY(), p2.getY());
     }
 
-    private Point limitPoint(Node n, Point target, boolean dimension) {
-        if (dimension) return new Point(n.point.getX(), target.getY());
-        else return new Point(target.getX(), n.point.getY());
+    private double limit(Node n, Point target, boolean dimension) {
+        Point limitPoint;
+        if (dimension) limitPoint = new Point(n.point.getX(), target.getY());
+        else limitPoint = new Point(target.getX(), n.point.getY());
+        return Point.distance(target, limitPoint);
     }
 
     private Point nearest(Node n, Point target, Point best) {
@@ -68,8 +84,7 @@ public class KDTree implements PointSet {
         if (Point.distance(n.point, target) < Point.distance(best, target)) best = n.point;
 
         boolean leftFirst = compare(target, n.point, n.dimension) < 0;
-        double limit = Point.distance(target, limitPoint(n, target, n.dimension));
-        boolean badSide = limit < Point.distance(target, best);
+        boolean badSide = limit(n, target, n.dimension) < Point.distance(target, best);
         best = nearest(n, target, best, leftFirst, badSide);
 
         return best;
@@ -84,5 +99,26 @@ public class KDTree implements PointSet {
             if (badSide) result = nearest(n.left, target, result);
         }
         return result;
+    }
+
+    /***************************************************************************
+     * Helper functions for rangeFinding().
+     ***************************************************************************/
+
+    private boolean withinRange(Point p, double[] range) {
+        return p.getX() >= range[0] && p.getX() <= range[1] && p.getY() >= range[2] && p.getY() <= range[3];
+    }
+
+    private void rangeFinding(Node n, List<Point> collected, double[] range) {
+        if (n == null) return;
+        if (withinRange(n.point, range)) collected.add(n.point);
+
+        if (n.dimension) {
+            if (range[0] <= n.point.getX()) rangeFinding(n.left, collected, range);
+            if (range[1] >= n.point.getX()) rangeFinding(n.right, collected, range);
+        } else {
+            if (range[2] <= n.point.getY()) rangeFinding(n.left, collected, range);
+            if (range[3] >= n.point.getY()) rangeFinding(n.right, collected, range);
+        }
     }
 }
