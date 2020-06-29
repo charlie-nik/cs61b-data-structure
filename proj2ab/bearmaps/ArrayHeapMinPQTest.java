@@ -121,6 +121,7 @@ public class ArrayHeapMinPQTest {
 
         System.out.println("Testing runtime:");
 
+
         Stopwatch sw = new Stopwatch();
         ArrayHeapMinPQ<Integer> pq = new ArrayHeapMinPQ<>();
         for (int i = 0; i < N; i++) {
@@ -128,11 +129,13 @@ public class ArrayHeapMinPQTest {
         }
         System.out.println("add(): " + sw.elapsedTime() + " seconds.");
 
+
         sw = new Stopwatch();
         for (int i = 0; i < N; i++) {
             pq.contains(StdRandom.uniform(N));
         }
         System.out.println("contains(): " + sw.elapsedTime() + " seconds.");
+
 
         sw = new Stopwatch();
         for (int i = 0; i < N; i++) {
@@ -140,11 +143,13 @@ public class ArrayHeapMinPQTest {
         }
         System.out.println("changePriority(): " + sw.elapsedTime() + " seconds.");
 
+
         sw = new Stopwatch();
         for (int i = 0; i < N; i++) {
             pq.removeSmallest();
         }
         System.out.println("removeSmallest(): " + sw.elapsedTime() + " seconds.");
+
 
         System.out.println("End of test");
 
