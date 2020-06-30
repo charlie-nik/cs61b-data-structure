@@ -47,7 +47,7 @@ public class Graph {
     /**
      * Return a set of the labels of neighbors of the Node labeled node.
      * Only returns outgoing neighbors (i.e. if there is an outgoing edge
-     * from node to the neighbor.
+     * from node to the neighbor.)
      */
     public Set<String> neighbors(String node) {
         if (!nodes.containsKey(node)) {

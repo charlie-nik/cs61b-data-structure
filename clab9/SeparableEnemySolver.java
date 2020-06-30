@@ -1,32 +1,35 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 public class SeparableEnemySolver {
 
     Graph g;
+    private final int n; // number of groups
 
     /**
      * Creates a SeparableEnemySolver for a file with name filename. Enemy
      * relationships are biderectional (if A is an enemy of B, B is an enemy of A).
      */
-    SeparableEnemySolver(String filename) throws java.io.FileNotFoundException {
+    SeparableEnemySolver(String filename, int n) throws java.io.FileNotFoundException {
         this.g = graphFromFile(filename);
+        this.n = n;
     }
 
-    /** Alterntive constructor that requires a Graph object. */
-    SeparableEnemySolver(Graph g) {
+    /** Alternative constructor that requires a Graph object. */
+    SeparableEnemySolver(Graph g, int n) {
         this.g = g;
+        this.n = n;
     }
 
     /**
      * Returns true if input is separable, false otherwise.
      */
     public boolean isSeparable() {
-        // TODO: Fix me
-        return false;
+        return new Enemy(g, n).isSeparable;
     }
-
 
     /* HELPERS FOR READING IN CSV FILES. */
 
@@ -45,7 +48,7 @@ public class SeparableEnemySolver {
                 }
                 continue;
             }
-            assert(lines.get(i).size() == 2);
+            assert (lines.get(i).size() == 2);
             input.connect(lines.get(i).get(0), lines.get(i).get(1));
         }
         return input;
@@ -84,6 +87,6 @@ public class SeparableEnemySolver {
         return values;
     }
 
-    /* END HELPERS  FOR READING IN CSV FILES. */
+    /* END HELPERS FOR READING IN CSV FILES. */
 
 }
