@@ -165,8 +165,8 @@ public class ArrayHeapMinPQTest {
 
     @Test
     public void testRemoveRuntime() {
-        int N = 1000_000;
-        int M = 10;
+        int N = 100_000;
+        int M = 1;
 
         double totalTime = 0;
         for (int i = 0; i < M; i++) {
@@ -181,7 +181,7 @@ public class ArrayHeapMinPQTest {
             totalTime += sw.elapsedTime();
         }
 
-        System.out.println(totalTime / M);
+        System.out.println("Remove all items from a " + N + "-item heap: " + totalTime + " seconds.");
 
     }
 

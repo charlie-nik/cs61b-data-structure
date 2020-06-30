@@ -78,6 +78,7 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
         swap(1, size);      // swap the last item to the top
         queue[size--] = null;  // remove the last item to avoid loitering
         sink(1);         // let the new top sink to its lawful place
+
         keys.remove(result);
         return result;
     }
