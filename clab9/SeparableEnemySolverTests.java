@@ -14,7 +14,7 @@ public class SeparableEnemySolverTests {
         g.connect("A", "D");
         g.connect("C", "D");
         SeparableEnemySolver solver = new SeparableEnemySolver(g, 2);
-        assertEquals(false, solver.isSeparable());
+        assertEquals(false, solver.isSeparableDFS());
     }
 
     @Test
@@ -23,7 +23,7 @@ public class SeparableEnemySolverTests {
         g.connect("A", "B");
         g.connect("C", "D");
         SeparableEnemySolver solver = new SeparableEnemySolver(g, 2);
-        assertEquals(true, solver.isSeparable());
+        assertEquals(true, solver.isSeparableDFS());
     }
 
     @Test
@@ -34,30 +34,30 @@ public class SeparableEnemySolverTests {
         g.connect("E", "D");
         g.connect("E", "C");
         SeparableEnemySolver solver = new SeparableEnemySolver(g, 2);
-        assertEquals(false, solver.isSeparable());
+        assertEquals(false, solver.isSeparableDFS());
     }
 
     @Test
     public void input1() throws FileNotFoundException {
         SeparableEnemySolver solver = new SeparableEnemySolver("input/party1", 2);
-        assertEquals(true, solver.isSeparable());
+        assertEquals(true, solver.isSeparableDFS());
     }
 
     @Test
     public void input2() throws FileNotFoundException {
         SeparableEnemySolver solver = new SeparableEnemySolver("input/party2", 2);
-        assertEquals(true, solver.isSeparable());
+        assertEquals(true, solver.isSeparableDFS());
     }
 
     @Test
     public void input3() throws FileNotFoundException {
         SeparableEnemySolver solver = new SeparableEnemySolver("input/party3", 2);
-        assertEquals(false, solver.isSeparable());
+        assertEquals(false, solver.isSeparableDFS());
     }
 
     @Test
     public void input4() throws FileNotFoundException {
         SeparableEnemySolver solver = new SeparableEnemySolver("input/party4", 2);
-        assertEquals(false, solver.isSeparable());
+        assertEquals(false, solver.isSeparableDFS());
     }
 }

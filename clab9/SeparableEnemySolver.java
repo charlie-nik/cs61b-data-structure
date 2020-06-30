@@ -27,8 +27,12 @@ public class SeparableEnemySolver {
     /**
      * Returns true if input is separable, false otherwise.
      */
-    public boolean isSeparable() {
-        return new Enemy(g, n).isSeparable;
+    public boolean isSeparableDFS() {
+        return new EnemyDFS(g, n).isSeparable;
+    }
+
+    public boolean isSeparableBFS() {
+        return new EnemyBFS(g, n).isSeparable;
     }
 
     /* HELPERS FOR READING IN CSV FILES. */
