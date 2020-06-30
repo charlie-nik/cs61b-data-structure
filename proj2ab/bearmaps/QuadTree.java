@@ -60,14 +60,15 @@ public class QuadTree implements PointSet {
      * Helper functions for rangeFinding().
      ***************************************************************************/
 
-    private boolean withinRange(Point p, double[] range) {
+    private boolean inBounds(Point p, double[] range) {
         return p.getX() >= range[0] && p.getX() <= range[1]
                 && p.getY() >= range[2] && p.getY() <= range[3];
     }
 
+    // this is Depth First Search (dfs) ?
     private void rangeFinding(Node n, List<Point> collected, double[] range) {
         if (n == null) return;
-        if (withinRange(n.point, range)) collected.add(n.point);
+        if (inBounds(n.point, range)) collected.add(n.point);
 
         if (range[0] <= n.point.getX()) {   // west?
             if (range[2] <= n.point.getY()) rangeFinding(n.SOUTH_WEST, collected, range);

@@ -90,6 +90,7 @@ public class KDTree implements PointSet {
         return best;
     }
 
+    // this is Depth First Search (dfs) ?
     private Point nearest(Node n, Point target, Point result, boolean leftFirst, boolean badSide) {
         if (leftFirst) {
             result = nearest(n.left, target, result);

@@ -59,5 +59,6 @@ public class QuadTreeTest {
             qt.rangeFinding(range);
         }
         System.out.println("Quad tree: " + sw.elapsedTime() + " seconds.");
+
     }
 }
