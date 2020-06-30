@@ -1,6 +1,6 @@
 import java.util.*;
 
-public class Enemy {
+public class EnemyDFS {
 
     private final Graph graph;
     private final Map<String, Boolean> marked;
@@ -8,7 +8,7 @@ public class Enemy {
 
     public boolean isSeparable = true;
 
-    public Enemy(Graph g, int n) {
+    public EnemyDFS(Graph g, int n) {
         // initialization
         graph = g;
         marked = new HashMap<>();
