@@ -21,7 +21,7 @@ public class MazeCycles extends MazeExplorer {
         tempEdgeTo = new int[maze.V()];
         dfs(0);
     }
-    
+
     private void dfs(int v) {
         while (!cycleFound) {
             marked[v] = true;
