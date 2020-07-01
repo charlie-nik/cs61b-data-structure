@@ -1,4 +1,4 @@
-package lab11.graphs;
+package lab10.graphs;
 
 import edu.princeton.cs.algs4.StdDraw;
 import edu.princeton.cs.algs4.In;

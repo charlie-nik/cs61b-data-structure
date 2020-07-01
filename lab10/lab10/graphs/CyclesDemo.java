@@ -1,4 +1,4 @@
-package lab11.graphs;
+package lab10.graphs;
 
 /**
  *  @author Josh Hug
@@ -8,7 +8,7 @@ public class CyclesDemo {
      * a purple line. */
     
     public static void main(String[] args) {
-        Maze maze = new Maze("lab11/graphs/maze.txt");
+        Maze maze = new Maze("lab10/graphs/maze.txt");
 
         MazeCycles mc = new MazeCycles(maze);
         mc.solve();
