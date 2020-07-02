@@ -89,6 +89,11 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
         return size;
     }
 
+    /* Returns true if PQ is empty. */
+    public boolean isEmpty() {
+        return size() == 0;
+    }
+
     /* Changes the priority of the given item. Throws NoSuchElementException if the item
      * doesn't exist. */
     @Override
@@ -142,10 +147,6 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
             throw new IllegalArgumentException("Index out of bound");
         }
         return queue[i].priority - queue[j].priority > 0;
-    }
-
-    private boolean isEmpty() {
-        return size() == 0;
     }
 
     private void resize(int capacity) {
