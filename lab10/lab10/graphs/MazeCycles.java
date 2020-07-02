@@ -9,17 +9,19 @@ public class MazeCycles extends MazeExplorer {
     public int[] edgeTo;
     public boolean[] marked;
     */
-    private int[] tempEdgeTo;
+    private final int s;
+    private final int[] tempEdgeTo;
     private boolean cycleFound = false;
 
     public MazeCycles(Maze m) {
         super(m);
+        s = maze.xyTo1D(1, 1); // assume we start at bottom left of maze
+        tempEdgeTo = new int[maze.V()];
     }
 
     @Override
     public void solve() {
-        tempEdgeTo = new int[maze.V()];
-        dfs(0);
+        dfs(s);
     }
 
     private void dfs(int v) {
