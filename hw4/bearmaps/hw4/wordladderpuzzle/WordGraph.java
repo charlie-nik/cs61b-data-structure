@@ -71,12 +71,55 @@ public class WordGraph implements AStarGraph<String> {
     @Override
     public List<WeightedEdge<String>> neighbors(String s) {
         List<WeightedEdge<String>> neighbs = new ArrayList<>();
-        for (String w : words) {
-            if (editDistance(s, w) == 1) {
-                neighbs.add(new WeightedEdge(s, w, 1));
+
+        List<String> possibles = new ArrayList<>();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            String left = "";
+            String right = "";
+            if (i > 0) {
+                left = s.substring(0, i);
+            }
+            if (i < s.length() - 1) {
+                right = s.substring(i + 1);
+            }
+
+            // delete
+            possibles.add(left + right);
+
+            // change
+            for (String changeOne : addToFront(right, c)) {
+                possibles.add(left + changeOne);
+            }
+
+            // add
+            for (String addOne : addToFront(c + right, null)) {
+                possibles.add(left + addOne);
+            }
+            if (right.equals("")) {
+                for (String addToEnd : addToFront("", null)) {
+                    possibles.add(left + c + addToEnd);
+                }
+            }
+        }
+
+        for (String w : possibles) {
+            if (words.contains(w)) {
+                neighbs.add(new WeightedEdge<>(s, w, 1));
             }
         }
         return neighbs;
+    }
+
+    // returns a list of new strings with the character (a..z) added to the front of s
+    private List<String> addToFront(String s, Character original) {
+        List<String> newWords = new ArrayList<>();
+        for (char i = 97; i < 123; i++) {
+            if (original == null || i != original) {
+                newWords.add(i + s);
+            }
+        }
+        return newWords;
     }
 
     @Override
