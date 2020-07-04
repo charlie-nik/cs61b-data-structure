@@ -1,0 +1,12 @@
+red red red
+orange
+yellow
+green
+blue
+white white white white white white white white white
+
+
+solution length: 9
+difficulty: Easy-
+dijkstra states explored: 301
+manhattan states explored: 9
