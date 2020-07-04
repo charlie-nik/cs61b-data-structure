@@ -5,7 +5,11 @@ import edu.princeton.cs.algs4.Stopwatch;
 import java.util.Stack;
 
 /**
- * It seems that IDA* is not so much an A* or Dijkstra as a DFS...
+ * IDA*: a variant of iterative deepening depth-first search (IDDFS).
+ * IDA* is a memory-constrained version of A*.
+ * But unlike A*, IDA* doesn't use dynamic programming,
+ * and often explores the same nodes many times -> LESS SPACE, MORE TIME.
+ * A heuristic is not necessary (P.S. an admissible heuristic always underestimates).
  */
 public class IDAStarSolver<Vertex> extends AStarSolver<Vertex> {
 
@@ -31,9 +35,8 @@ public class IDAStarSolver<Vertex> extends AStarSolver<Vertex> {
         double threshold = priority(s);
 
         while (true) {
-            Vertex v = paths.peek();
-            double distance = ids(v, threshold);
-            if (outcome != null) {
+            double distance = ids(threshold);
+            if (distance < 0) {
                 // Target found or timeout
                 return;
             } else if (distance == Double.MAX_VALUE) {
@@ -48,52 +51,50 @@ public class IDAStarSolver<Vertex> extends AStarSolver<Vertex> {
     }
 
     /**
-     * Performs DFS up to a depth where a threshold is reached,
+     * IDS = Iterative Deepening Search
+     * IDS performs DFS up to a depth where a threshold is reached,
      * as opposed to iterative-deepening DFS which stops at a fixed depth.
-     * Returns -1 if target found, -2 if timeout.
-     * (IDS => Iterative Deepening Search)
+     * When the threshold is breached, it is updated and the algorithm starts all over again
+     * from the root down to the new depth.
      */
     // Iterative Deepening Search (IDS)
-    private double ids(Vertex v, double threshold) {
-        /*if (sw.elapsedTime() > timeout) {
+    private double ids(double threshold) {
+        Vertex v = paths.peek();
+        if (sw.elapsedTime() > timeout) {
             outcome = SolverOutcome.TIMEOUT;
             return -1;
-        }*/
+        }
         if (v.equals(t)) {
             outcome = SolverOutcome.SOLVED;
             return -1;
         }
 
-        double cost = priority(v);  // f(n) = g(n) + h(n)
-        if (cost > threshold) {
+        double f = priority(v);  // f(n) = g(n) + h(n)
+        if (f > threshold) {
             // Threshold breached
-            return cost;
+            return f;
         }
 
         // Explore all vertexes rooted at this vertex until threshold is breached,
-        // then update threshold to the new minimum (next-smallest),
-        // which is basically the priority of the next vertex to be explored.
+        // then update threshold to the new minimum (next-smallest).
         double min = Double.MAX_VALUE;
-        Vertex next = null;
         for (WeightedEdge<Vertex> e : graph.neighbors(v)) {
             Vertex w = e.to();
             if (!paths.contains(w)) {
-                double newDist = distTo.get(v) + e.weight();
-                if (!distTo.containsKey(w) || newDist < distTo.get(w)) {
-                    distTo.put(w, newDist);
+                paths.push(w);
+                double g = distTo.get(v) + e.weight();  // g(n) = g(n.parent) + cost(n.parent, n)
+                if (!distTo.containsKey(w) || g < distTo.get(w)) {
+                    distTo.put(w, g);
                     edgeTo.put(w, v);
                 }
-                double t = ids(w, threshold);
+                double t = ids(threshold);
                 if (t < 0) {
                     return t;   // target found or timeout
                 } else if (t < min) {
                     min = t;
-                    next = w;
                 }
+                paths.pop();
             }
-        }
-        if (next != null) {
-            paths.push(next);
         }
         return min;
     }
