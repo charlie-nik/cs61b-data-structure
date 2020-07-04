@@ -52,12 +52,11 @@ public class IDAStarSolver<Vertex> extends AStarSolver<Vertex> {
 
     /**
      * IDS = Iterative Deepening Search
-     * IDS performs DFS up to a depth where a threshold is reached,
+     * It performs DFS up to a depth where a threshold is reached,
      * as opposed to iterative-deepening DFS which stops at a fixed depth.
      * When the threshold is breached, it is updated and the algorithm starts all over again
      * from the root down to the new depth.
      */
-    // Iterative Deepening Search (IDS)
     private double ids(double threshold) {
         Vertex v = paths.peek();
         if (sw.elapsedTime() > timeout) {
@@ -99,6 +98,7 @@ public class IDAStarSolver<Vertex> extends AStarSolver<Vertex> {
         return min;
     }
 
+    // FOr IDA*, this method is not very informative
     @Override
     public int numStatesExplored() {
         return paths.size();
