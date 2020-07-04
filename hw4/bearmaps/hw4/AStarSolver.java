@@ -47,10 +47,10 @@ public class AStarSolver<Vertex> implements ShortestPathsSolver<Vertex> {
 
         while (!pq.isEmpty()) {
             Vertex v = pq.removeSmallest();
-            /*if (sw.elapsedTime() > timeout) {
+            if (sw.elapsedTime() > timeout) {
                 outcome = SolverOutcome.TIMEOUT;
                 break;
-            }*/
+            }
             if (v.equals(t)) {
                 outcome = SolverOutcome.SOLVED;
                 break;
