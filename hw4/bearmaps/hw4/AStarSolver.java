@@ -38,6 +38,9 @@ public class AStarSolver<Vertex> implements ShortestPathsSolver<Vertex> {
         a_star();
     }
 
+    /**
+     * A* algorithm with memory optimization.
+     */
     protected void a_star() {
         Stopwatch sw = new Stopwatch();
 
@@ -70,6 +73,9 @@ public class AStarSolver<Vertex> implements ShortestPathsSolver<Vertex> {
         return distTo.get(v) + graph.estimatedDistanceToGoal(v, t);
     }
 
+    /**
+     * Relaxes the given edge, and updates or adds the new value to priority queue.
+     */
     protected void relax(WeightedEdge<Vertex> e) {
         Vertex from = e.from();
         Vertex to = e.to();
@@ -90,6 +96,9 @@ public class AStarSolver<Vertex> implements ShortestPathsSolver<Vertex> {
         return outcome;
     }
 
+    /**
+     * Renders the solution path into a List.
+     */
     @Override
     public List<Vertex> solution() {
         List<Vertex> solution = new LinkedList<>();
