@@ -11,8 +11,8 @@ public class QuickSort {
      * @return    A Queue containing the items of 
      *            q1 followed by the items of q2.
      */
-    private static <Item extends Comparable> Queue<Item> catenate(Queue<Item> q1, Queue<Item> q2) {
-        Queue<Item> catenated = new Queue<Item>();
+    private static <Item extends Comparable<Item>> Queue<Item> catenate(Queue<Item> q1, Queue<Item> q2) {
+        Queue<Item> catenated = new Queue<>();
         for (Item item : q1) {
             catenated.enqueue(item);
         }
@@ -28,7 +28,7 @@ public class QuickSort {
      * @param items  A Queue of items
      * @return       A random item from items
      */
-    private static <Item extends Comparable> Item getRandomItem(Queue<Item> items) {
+    private static <Item extends Comparable<Item>> Item getRandomItem(Queue<Item> items) {
         int pivotIndex = (int) (Math.random() * items.size());
         Item pivot = null;
         // Walk through the queue to find the item at the given index.
@@ -54,10 +54,19 @@ public class QuickSort {
      * @param greater   An empty Queue. When the function completes, this queue will contain
      *                  all of the items in unsorted that are greater than the given pivot.
      */
-    private static <Item extends Comparable> void partition(
+    private static <Item extends Comparable<Item>> void partition(
             Queue<Item> unsorted, Item pivot,
             Queue<Item> less, Queue<Item> equal, Queue<Item> greater) {
         // Your code here!
+        for (Item item : unsorted) {
+            if (item.compareTo(pivot) > 0) {
+                greater.enqueue(item);
+            } else if (item.compareTo(pivot) < 0) {
+                less.enqueue(item);
+            } else {
+                equal.enqueue(item);
+            }
+        }
     }
 
     /**
@@ -66,9 +75,20 @@ public class QuickSort {
      * @param items  A Queue of possibly unsorted items
      * @return       A Queue of sorted items
      */
-    public static <Item extends Comparable> Queue<Item> quickSort(
+    public static <Item extends Comparable<Item>> Queue<Item> quickSort(
             Queue<Item> items) {
         // Your code here!
-        return items;
+        if (items.size() <= 1) {
+            return items;
+        }
+        Queue<Item> less = new Queue<>();
+        Queue<Item> equal = new Queue<>();
+        Queue<Item> greater = new Queue<>();
+        partition(items, getRandomItem(items), less, equal, greater);
+
+        less = quickSort(less);
+        greater = quickSort(greater);
+
+        return catenate(less, catenate(equal, greater));
     }
 }

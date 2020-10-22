@@ -11,7 +11,7 @@ public class MergeSort {
      * @param   q2  A Queue in sorted order from least to greatest.
      * @return      The smallest item that is in q1 or q2.
      */
-    private static <Item extends Comparable> Item getMin(
+    private static <Item extends Comparable<Item>> Item getMin(
             Queue<Item> q1, Queue<Item> q2) {
         if (q1.isEmpty()) {
             return q2.dequeue();
@@ -20,8 +20,8 @@ public class MergeSort {
         } else {
             // Peek at the minimum item in each queue (which will be at the front, since the
             // queues are sorted) to determine which is smaller.
-            Comparable q1Min = q1.peek();
-            Comparable q2Min = q2.peek();
+            Item q1Min = q1.peek();
+            Item q2Min = q2.peek();
             if (q1Min.compareTo(q2Min) <= 0) {
                 // Make sure to call dequeue, so that the minimum item gets removed.
                 return q1.dequeue();
@@ -40,10 +40,16 @@ public class MergeSort {
      * @return         A Queue of queues, each containing an item from items.
      *
      */
-    private static <Item extends Comparable> Queue<Queue<Item>>
+    private static <Item extends Comparable<Item>> Queue<Queue<Item>>
             makeSingleItemQueues(Queue<Item> items) {
         // Your code here!
-        return null;
+        Queue<Queue<Item>> queues = new Queue<>();
+        while (!items.isEmpty()) {
+            Queue<Item> q = new Queue<>();
+            q.enqueue(items.dequeue());
+            queues.enqueue(q);
+        }
+        return queues;
     }
 
     /**
@@ -59,10 +65,14 @@ public class MergeSort {
      *              greatest.
      *
      */
-    private static <Item extends Comparable> Queue<Item> mergeSortedQueues(
+    private static <Item extends Comparable<Item>> Queue<Item> mergeSortedQueues(
             Queue<Item> q1, Queue<Item> q2) {
         // Your code here!
-        return null;
+        Queue<Item> res = new Queue<>();
+        for (int i = 0; i < (q1.size() + q2.size()); i++) {
+            res.enqueue(getMin(q1, q2));
+        }
+        return res;
     }
 
     /**
@@ -75,9 +85,18 @@ public class MergeSort {
      * @return         A Queue containing every item in "items".
      *
      */
-    public static <Item extends Comparable> Queue<Item> mergeSort(
+    public static <Item extends Comparable<Item>> Queue<Item> mergeSort(
             Queue<Item> items) {
         // Your code here!
-        return items;
+        if (items.size() <= 1) {
+            return items;
+        }
+        Queue<Queue<Item>> queues = makeSingleItemQueues(items);
+        while (queues.size() > 1) {
+            Queue<Item> left = queues.dequeue();
+            Queue<Item> right = queues.dequeue();
+            queues.enqueue(mergeSortedQueues(left, right));
+        }
+        return queues.dequeue();
     }
 }
