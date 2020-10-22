@@ -5,13 +5,29 @@ import org.junit.Test;
 public class TestSortAlgs {
 
     @Test
-    public void testQuickSort() {
+    public void testMergeSort() {
+        Queue<String> q = new Queue<>();
+        q.enqueue("Joe");
+        q.enqueue("Omar");
+        q.enqueue("Itai");
+        q.enqueue("Surprise");
+        q.enqueue("Bebop");
 
+        MergeSort.mergeSort(q);
+        org.junit.Assert.assertTrue(isSorted(q));
     }
 
     @Test
-    public void testMergeSort() {
+    public void testQuickSort() {
+        Queue<String> q = new Queue<>();
+        q.enqueue("Joe");
+        q.enqueue("Omar");
+        q.enqueue("Itai");
+        q.enqueue("Surprise");
+        q.enqueue("Bebop");
 
+        q = QuickSort.quickSort(q);
+        org.junit.Assert.assertTrue(isSorted(q));
     }
 
     /**
@@ -20,7 +36,7 @@ public class TestSortAlgs {
      * @param items  A Queue of items
      * @return       true/false - whether "items" is sorted
      */
-    private <Item extends Comparable> boolean isSorted(Queue<Item> items) {
+    private <Item extends Comparable<Item>> boolean isSorted(Queue<Item> items) {
         if (items.size() <= 1) {
             return true;
         }
