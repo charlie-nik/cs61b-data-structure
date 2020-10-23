@@ -1,7 +1,10 @@
 package bearmaps.proj2c;
 
 import bearmaps.hw4.AStarSolver;
+import bearmaps.hw4.WeightedEdge;
+import org.apache.commons.math3.distribution.TDistribution;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -32,6 +35,7 @@ public class Router {
     }
 
     /**
+     * (Part IV)
      * Create the list of directions corresponding to a route on the graph.
      * @param g The graph to use.
      * @param route The route to translate into directions. Each element
@@ -40,8 +44,62 @@ public class Router {
      * route.
      */
     public static List<NavigationDirection> routeDirections(AugmentedStreetMapGraph g, List<Long> route) {
-        /* fill in for part IV */
-        return null;
+
+        List<NavigationDirection> navigation = new LinkedList<>();
+        int direction = NavigationDirection.START;
+        String road = null;
+        double miles = 0;
+        long prev = 0;
+
+        for (int i = 0; i < route.size() - 1; i++) {
+            long curr = route.get(i);
+            long next = route.get(i + 1);
+            for (WeightedEdge<Long> e : g.neighbors(curr)) {
+                if (e.to().equals(next)) {
+                    String roadName = e.getName() == null ?
+                            NavigationDirection.UNKNOWN_ROAD : e.getName();
+                    road = road == null ? roadName : road;
+                    if (!road.equals(roadName)) {
+                        navigation.add(newND(direction, road, miles));
+                        direction = getDirection(g, prev, curr, next);
+                        road = roadName;
+                        miles = e.weight();
+                    } else {
+                        miles += e.weight();
+                    }
+                    if (i == route.size() - 2) {
+                        navigation.add(newND(direction, road, miles));
+                    }
+                    break;
+                }
+            }
+            prev = curr;
+        }
+        return navigation;
+    }
+
+    /**
+     * Helper method that combines NavigationDirection.bearing and
+     * NavigationDirection.getDirection into one method.
+     */
+    private static int getDirection(AugmentedStreetMapGraph g, long prev, long curr, long next) {
+        double prevBearing = NavigationDirection.bearing(g.lon(prev),g.lon(curr),
+                g.lat(prev), g.lat(curr));
+        double currBearing = NavigationDirection.bearing(g.lon(curr), g.lon(next),
+                g.lat(curr), g.lat(next));
+        return NavigationDirection.getDirection(prevBearing, currBearing);
+    }
+
+    /**
+     * Helper method that creates a new instance of NavigationDirection
+     * with the given DIRECTION, WAY, and DISTANCE.
+     */
+    private static NavigationDirection newND(int direction, String way, double distance) {
+        NavigationDirection nd = new NavigationDirection();
+        nd.direction = direction;
+        nd.way = way;
+        nd.distance = distance;
+        return nd;
     }
 
     /**
