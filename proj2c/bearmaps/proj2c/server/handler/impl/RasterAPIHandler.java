@@ -84,11 +84,60 @@ public class RasterAPIHandler extends APIRouteHandler<Map<String, Double>, Map<S
      */
     @Override
     public Map<String, Object> processRequest(Map<String, Double> requestParams, Response response) {
-        //System.out.println("yo, wanna know the parameters given by the web browser? They are:");
-        //System.out.println(requestParams);
+        System.out.println("yo, wanna know the parameters given by the web browser? They are:");
+        System.out.println(requestParams);
         Map<String, Object> results = new HashMap<>();
-        System.out.println("Since you haven't implemented RasterAPIHandler.processRequest, nothing is displayed in "
-                + "your browser.");
+
+        double ullon = requestParams.get("ullon");
+        double ullat = requestParams.get("ullat");
+        double lrlon = requestParams.get("lrlon");
+        double lrlat = requestParams.get("lrlat");
+
+        // bad query or no coverage
+        if (ullon > lrlon || ullat < lrlat ||
+                ullon > Constants.ROOT_LRLON || ullat < Constants.ROOT_LRLAT ||
+                lrlon < Constants.ROOT_ULLON || lrlat > Constants.ROOT_ULLAT) {
+            return queryFail();
+        }
+
+        // determine the level of zoom by computing LonDPP
+        int depth;
+        double requestLonDPP = (lrlon - ullon) / requestParams.get("w");
+        double imageLonDist = Constants.ROOT_LRLON - Constants.ROOT_ULLON;
+        for (depth = 0; depth < 7; depth++) {
+            if (imageLonDist / Constants.TILE_SIZE <= requestLonDPP) {
+                break;
+            }
+            imageLonDist = imageLonDist / 2;
+        }
+        double imageLatDist = (Constants.ROOT_ULLAT - Constants.ROOT_LRLAT) / Math.pow(2, depth);
+
+        // determine which images cover the region of the query box
+        int xStart = ullon >= Constants.ROOT_ULLON ?
+                (int) ((ullon - Constants.ROOT_ULLON) / imageLonDist) : 0;
+        int xEnd = lrlon <= Constants.ROOT_LRLON ?
+                (int) ((lrlon - Constants.ROOT_ULLON) / imageLonDist) : (int) Math.pow(2, depth);
+        int yStart = ullat <= Constants.ROOT_ULLAT ?
+                (int) ((Constants.ROOT_ULLAT - ullat) / imageLatDist) : 0;
+        int yEnd = lrlat >= Constants.ROOT_LRLAT ?
+                (int) ((Constants.ROOT_ULLAT - lrlat) / imageLatDist) : (int) Math.pow(2, depth);
+
+
+        String[][] images = new String[yEnd - yStart + 1][xEnd - xStart + 1];
+        for (int i = 0; i < images.length; i++) {
+            for (int j = 0; j < images[i].length; j++) {
+                images[i][j] = String.format("d%s_x%s_y%s.png", depth, xStart + j, yStart + i);
+            }
+        }
+
+        results.put("render_grid", images);
+        results.put("raster_ul_lon", Constants.ROOT_ULLON + (xStart * imageLonDist));
+        results.put("raster_ul_lat", Constants.ROOT_ULLAT - (yStart * imageLatDist));
+        results.put("raster_lr_lon", Constants.ROOT_ULLON + ((xEnd + 1) * imageLonDist));
+        results.put("raster_lr_lat", Constants.ROOT_ULLAT - ((yEnd + 1) * imageLatDist));
+        results.put("depth", depth);
+        results.put("query_success", true);
+
         return results;
     }
 
