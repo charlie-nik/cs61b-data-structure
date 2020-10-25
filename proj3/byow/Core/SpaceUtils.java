@@ -5,15 +5,15 @@ public class SpaceUtils {
     public enum Direction {
         EAST, SOUTH, WEST, NORTH
     }
-    public enum Directionality {
+    public enum Orientation {
         HORIZONTAL, VERTICAL
     }
 
-    public static Directionality directionality(Direction dir) {
+    public static Orientation orientation(Direction dir) {
         if (dir == Direction.EAST || dir == Direction.WEST) {
-            return Directionality.HORIZONTAL;
+            return Orientation.HORIZONTAL;
         } else if (dir == Direction.NORTH || dir == Direction.SOUTH) {
-            return Directionality.VERTICAL;
+            return Orientation.VERTICAL;
         } else {
             return null; // when direction is null (ie. starter-room)
         }

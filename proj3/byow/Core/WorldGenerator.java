@@ -4,51 +4,72 @@ import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 
+import java.util.Random;
+
 public class WorldGenerator {
-    private static final int WIDTH = 80;
-    private static final int HEIGHT = 30;
+    private final int WIDTH;
+    private final int HEIGHT;
+    public final TETile[][] WORLD;
     private int numOccupied;
-    // private final TETile[][] WORLD;
+    private final Random RANDOM;
 
-    /*
-    public WorldGenerator(int w, int h) {
-        WIDTH = w;
-        HEIGHT = h;
+
+    public WorldGenerator(int width, int height, Random r) {
+        WIDTH = width;
+        HEIGHT = height;
+        WORLD = new TETile[width][height];
         numOccupied = 0;
-        WORLD = new TETile[w][h];
-    }
-     */
+        RANDOM = r;
 
-    public static void fillBackground(TETile[][] world) {
-        for (int i = 0; i < world.length; i++) {
-            for (int j = 0; j < world[0].length; j++) {
-                world[i][j] = Tileset.NOTHING;
+        fillBackground();
+        generateWorld();
+    }
+
+    private void fillBackground() {
+        for (int i = 0; i < WORLD.length; i++) {
+            for (int j = 0; j < WORLD[0].length; j++) {
+                WORLD[i][j] = Tileset.NOTHING;
             }
         }
     }
 
+    private void generateWorld() {
+        Room starterRoom = new Room(WORLD, null, RANDOM);
+        numOccupied += starterRoom.numOfTiles();
+
+        while (load() < 0.35) {
+            int randomRoom = RANDOM.nextInt(Room.ROOMS.size());
+            Room room = Room.ROOMS.get(randomRoom);
+
+            // FIXME if fails, it'll always fail cuz it's the same seed......
+            Hallway hallway = new Hallway(WORLD, room, RANDOM);
+            if (hallway.isHallwayCreated()) { // FIXME too much wasted work
+                numOccupied += hallway.numOfTiles();
+
+                Hallway turn = Hallway.hallwayTurn(WORLD, hallway); // FIXME too likely
+                if (turn.isHallwayCreated()) {
+                    numOccupied += turn.numOfTiles();
+                    hallway = turn;
+                }
+
+                Room newRoom = new Room(WORLD, hallway, RANDOM);  // FIXME: not every time is a new room to be created
+                numOccupied += newRoom.numOfTiles();
+            }
+        }
+    }
+
+    private double load() {
+        return (float) numOccupied / (WIDTH * HEIGHT);
+    }
+
     public static void main(String[] args) {
         TERenderer teRenderer = new TERenderer();
-        teRenderer.initialize(WIDTH, HEIGHT);
+        teRenderer.initialize(80, 30);
 
-        TETile[][] world = new TETile[WIDTH][HEIGHT];
-        fillBackground(world);
+        Random r = new Random();
+        WorldGenerator wg = new WorldGenerator(80, 30, r);
 
-        for (int N = 0; N < 20; N++) {
-            // Areaaa.addRoom(world);
-        }
-        for (int N = 0; N < 40; N++) {
-            // Areaaa.addHallway(world);
-        }
-
-        for (int i = 0; i < 7; i++) {
-            world[20][10 + i] = Tileset.GRASS;
-        }
-        Room r = new Room(20, 16, null);
-        r.addToWorld(world);
-        new Hallway(r).addToWorld(world);
-
-        teRenderer.renderFrame(world);
+        teRenderer.renderFrame(wg.WORLD);
     }
 
 }

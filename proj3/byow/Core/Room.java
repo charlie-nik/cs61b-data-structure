@@ -1,124 +1,138 @@
+/********************************************************************************************
+ * Constructs a room of random size and position at the end of a hallway.
+ *
+ * Criteria of validity:
+ *
+ *    - 2 <= width/height <= 5
+ *    - no overlap with existing rooms and hallways
+ *
+ * If a valid room is created within 3 attempts, draws it to the world. If not, quit.
+ * FIXME: if fails, it gotta repeat a lot of stuff to make another try. RUNTIME OPTIMIZATION
+ * FIXME: runtime optimization idea: graph traversal?? extend to lesser occupied directions...
+ * FIXME: lower the chance of superfluous failed attempts
+ *
+ *******************************************************************************************/
 package byow.Core;
 
 import byow.Core.SpaceUtils.*;
+import byow.TileEngine.TETile;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
-/**
- * Constructs a room of random size at the end of a hallway, which was going in
- * direction DIRECTION before it stopped at position(x, y).
- * Room's width and height should be greater than 1, for otherwise it's a hallway,
- * and lesser than 8.
- * Room shouldn't overlap with existing rooms. FIXME: or hallways!!!
- * If a valid room is created within 5 attempts, it is added to the ROOMS list.
- */
+
 public class Room implements Area {
     public static final List<Room> ROOMS = new LinkedList<>();
-    private Position pos;
+    private static final int MAX_LENGTH = 6;
+    private final Random RANDOM;
     private int width, height;
+    private Position pos;
 
-    public Room(int x, int y, Direction direction) {
-        int numAttempts = RANDOM.nextInt(5);
+    public Room(TETile[][] world, Hallway hallway, Random r) {
+        RANDOM = r;
+        int numAttempts = ROOMS.size() == 0 ? Integer.MAX_VALUE : 3;
+
         for (int i = 0; i < numAttempts; i++) {
 
-            createRandomRoom(x, y, direction);
+            createRandomRoom(hallway);
 
-            if (!checkOverlap(pos) && (width > 0) && (height > 0)) {
+            if (isValid(hallway)) {
+                addToWorld(world);
                 ROOMS.add(this);
+                AREAS.add(this);
                 break;
             }
         }
     }
 
-    private void createRandomRoom(int x, int y, Direction direction) {
-        width = RANDOM.nextInt(6) + 2;
-        height = RANDOM.nextInt(6) + 2;
-        int roomX = randomInBoundsX(width);
-        int roomY = randomInBoundsY(height);
+    private void createRandomRoom(Hallway hallway) {
+        // Initialize random size
+        width = RANDOM.nextInt(MAX_LENGTH - 1) + 2;
+        height = RANDOM.nextInt(MAX_LENGTH - 1) + 2;
 
-        // Connects room with hallway.
-        // Doesn't apply to starter-room which doesn't have any direction.
-        int limitSize = 0;
-        Directionality directionality = SpaceUtils.directionality(direction);
+        // Initialize random position
+        // Except for starter-room which doesn't come from any hallway, room's position is
+        // determined by making sure it is connected with the given hallway
+        if (hallway == null) {
+            int roomX = randomInBoundsX();
+            int roomY = randomInBoundsY();
+            pos = new Position(roomX, roomY);
+        } else {
+            connectHallway(hallway);
+        }
+    }
 
-        if (directionality == Directionality.HORIZONTAL) {
-            if (direction == Direction.EAST) {
-                limitSize = WIDTH - x - 2;
-                roomX = x + 1;
-            } else if (direction == Direction.WEST) {
-                limitSize = x - 1;
-                roomX = x - width;
+    /**
+     * Randomly determines room position while making sure it connects with hallway.
+     */
+    private void connectHallway(Hallway hallway) {
+        int xEndpoint = hallway.endPosition().getX();
+        int yEndpoint = hallway.endPosition().getY();
+
+        int roomX, roomY;
+
+        if (hallway.orientation() == Orientation.HORIZONTAL) {
+            if (hallway.direction() == Direction.EAST) {
+                roomX = xEndpoint + 1;
+                int maxWidth = WIDTH - roomX - 1;
+                width = randomLengthWithin(maxWidth);
+            } else {
+                int maxWidth = xEndpoint - 1;
+                width = randomLengthWithin(maxWidth);
+                roomX = xEndpoint - width;
             }
-            width = Math.min(7, RANDOM.nextInt(limitSize + 1));
-            roomY = Math.min(HEIGHT - 1, (RANDOM.nextInt(height) + y));
-
-        } else if (directionality == Directionality.VERTICAL) {
-            if (direction == Direction.NORTH) {
-                limitSize = HEIGHT - y - 2;
-                roomY = y + height;
-            } else if (direction == Direction.SOUTH) {
-                limitSize = y - 1;
-                roomY = y - 1;
+            roomY = Math.max(height, Math.min(HEIGHT - 2, RANDOM.nextInt(height) + yEndpoint));
+        } else {
+            if (hallway.direction() == Direction.NORTH) {
+                int maxHeight = HEIGHT - yEndpoint - 2;
+                height = randomLengthWithin(maxHeight);
+                roomY = yEndpoint + height;
+            } else {
+                roomY = yEndpoint - 1;
+                int maxHeight = roomY;
+                height = randomLengthWithin(maxHeight);
             }
-            height = Math.min(7, RANDOM.nextInt(limitSize + 1));
-            roomX = Math.max(1, RANDOM.nextInt(width) + (x - width + 1));
+            roomX = Math.max(1, Math.min(WIDTH - width - 1,
+                    RANDOM.nextInt(width) + (xEndpoint - width + 1)));
         }
 
         pos = new Position(roomX, roomY);
     }
 
-    /**
-     * Returns true if room overlaps with existing ones, false otherwise.
-     */
-    private boolean checkOverlap(Position pos) {
-        int xStart = pos.getX();
-        int yStart = pos.getY();
-        int xEnd = xStart + width - 1;
-        int yEnd = yStart - height + 1;
 
-        for (Room room : ROOMS) {
-            int tempXStart = room.pos.getX();
-            int tempYStart = room.pos.getY();
-            int tempXEnd = tempXStart + room.width - 1;
-            int tempYEnd = tempYStart - room.height + 1;
-
-            if (xOverlap(xStart, xEnd, tempXStart, tempXEnd) &&
-                    yOverlap(yStart, yEnd, tempYStart, tempYEnd)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Returns true if x-coordinates overlap.
-     */
-    private boolean xOverlap(int s1, int e1, int s2, int e2) {
-        return ((s1 <= s2) && (e1 >= s2)) || ((s1 <= e2) && (e1 >= e2));
-    }
-
-    /**
-     * Returns true if y-coordinates overlap.
-     */
-    private boolean yOverlap(int s1, int e1, int s2, int e2) {
-        return ((s1 >= s2) && (e1 <= s2)) || ((s1 >= e2) && (e1 <= e2));
-    }
-
+    //region Handy Tools
+    //----------------------------------------------------------------------------------------
     /**
      * Randomly returns a valid x-coordinate that doesn't touch the borders of the world.
      */
-    private static int randomInBoundsX(int width) {
+    private int randomInBoundsX() {
         return 1 + RANDOM.nextInt(WIDTH - width - 2);
     }
 
     /**
      * Randomly returns a valid y-coordinate that doesn't touch the borders of the world.
      */
-    private static int randomInBoundsY(int height) {
+    private int randomInBoundsY() {
         return height + RANDOM.nextInt(HEIGHT - height - 2);
     }
 
+    /**
+     * If the maximum length value is greater than 1, returns a random integer in range
+     * [2, Math.min(max, MAX_LENGTH)]. Otherwise, returns -1.
+     */
+    private int randomLengthWithin(int max) {
+        int len = -1;
+        if (max > 1) {
+            len = RANDOM.nextInt(Math.min(max, MAX_LENGTH) - 1) + 2;
+        }
+        return len;
+    }
+    //endregion
+
+
+    //region Accessors
+    //----------------------------------------------------------------------------------------
     @Override
     public Position position() {
         return pos;
@@ -138,4 +152,6 @@ public class Room implements Area {
     public int numOfTiles() {
         return width * height;
     }
+    //endregion
+
 }
