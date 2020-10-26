@@ -21,37 +21,52 @@ import java.util.Random;
 
 
 public class Hallway implements Area {
-    private final Random RANDOM;
-    private final Position startPosition;
-    private final Direction direction;
-    private final int length;
-    private static final int MAX_LENGTH = 8;
+    private final int WIDTH, HEIGHT;                    // width and height of WORLD
+    private final Room room;                            // the room where hallway comes from
+    private final Position startPosition;               // hallway instance's start position
+    private final Direction direction;                  // hallway instance's direction
+    private final int length;                           // hallway instance's length
+    private boolean isTurn = false;                     // whether hallway is a L-turn or not
+    private static final int MAX_LENGTH = 8;            // hallway class's size limit
 
+    private final Random RANDOM;
+    private final int attempt;
     private boolean hallwayCreated = false;
+
 
     //region Constructors
     //----------------------------------------------------------------------------------------
     /**
      * Primary public constructor, accessible for world-generating engine.
      */
-    public Hallway(TETile[][] world, Room room, Random r) {
-        this(room, null, null, -1, r);
+    public Hallway(TETile[][] world, Room origin, Random random) {
+        this(world, origin, null, null, -1, random);
 
-        if (isValid(room)) {
+        room.hallwayAttempt += 1;
+
+        if (isValid(allKins())) {
             hallwayCreated = true;
+            room.hallways().add(this);
             AREAS.add(this);
             addToWorld(world);
         }
     }
 
     /**
-     * Unless otherwise specified, a hallway instance is constructed with random direction,
-     * random position, and random length.
+     * All-purpose constructor.
+     * For general hallways, a hallway instance is constructed with random direction, random
+     * start position, and random length.
+     * For hallway turns, direction and start position are determined elsewhere in advance.
      */
-    private Hallway(Room room, Direction dir, Position pos, int len, Random r) {
+    private Hallway(TETile[][] world, Room origin, Direction dir, Position pos, int len, Random r) {
+        WIDTH = world.length;
+        HEIGHT = world[0].length;
         RANDOM = r;
+
+        room = origin;
+        attempt = origin != null ? room.hallwayAttempt : 0;     // hallway turn = 0 attempt
         direction = dir == null ? randomDirection() : dir;
-        startPosition = pos == null ? randomStartPos(room, direction) : pos;
+        startPosition = pos == null ? randomStartPos(direction) : pos;
         length = len < 0 ? randomLength(direction, startPosition) : len;
     }
     //endregion
@@ -63,7 +78,7 @@ public class Hallway implements Area {
      * Randomly returns a direction: east, west, north, or south.
      */
     private Direction randomDirection() {
-        int randomDirection = RANDOM.nextInt(4);
+        int randomDirection = enhancedRandom(4);
 
         if (randomDirection == 0) {
             return Direction.EAST;
@@ -77,41 +92,17 @@ public class Hallway implements Area {
     }
 
     /**
-     * Given the direction in which the hallway will depart from the room,
-     * randomly returns a start position along the respective side of the room.
-     * For example,
+     * Given the direction in which the hallway will depart from the room randomly returns a
+     * start position along the respective side of the room. For example,
      *
      *   - if direction is EAST, returns a position on the RIGHT of the room
      *   - if direction is WEST, returns a position on the LEFT of the room
      *   - if direction is NORTH, returns a position on the TOP of the room
      *   - if direction is SOUTH, returns a position on the BOTTOM of the room
-     *
      */
-    private Position randomStartPos(Room room, Direction dir) {
-        List<Position> entrances = new LinkedList<>();
-
-        int x = room.position().getX();
-        int y = room.position().getY();
-
-        if (SpaceUtils.orientation(dir) == Orientation.HORIZONTAL) {
-            for (int i = 0; i < room.height(); i++) {
-                if (dir == Direction.EAST) {
-                    entrances.add(new Position(x + room.width(), y - i));
-                } else {
-                    entrances.add(new Position(x - 1, y - i));
-                }
-            }
-        } else {
-            for (int i = 0; i < room.width(); i++) {
-                if (dir == Direction.NORTH) {
-                    entrances.add(new Position(x + i, y + 1));
-                } else {
-                    entrances.add(new Position(x + i, y - room.height()));
-                }
-            }
-        }
-
-        return entrances.get(RANDOM.nextInt(entrances.size()));
+    private Position randomStartPos(Direction dir) {
+        List<Position> roomBorder = room.borders().get(dir);
+        return roomBorder.get(enhancedRandom(roomBorder.size()));
     }
 
     /**
@@ -131,11 +122,24 @@ public class Hallway implements Area {
             maxLength = startPos.getY();
         }
 
-        if (maxLength > 1) {
-            len = RANDOM.nextInt(Math.min(MAX_LENGTH, maxLength) - 1) + 2;
-        }
-
+        len = maxLength > 1 ? enhancedRandom(Math.min(MAX_LENGTH, maxLength) - 1) + 2 : len;
         return len;
+    }
+
+    /**
+     * Returns a list of areas with which the hallway is allowed to overlap. The list should
+     * include hallway's origin room and all hallways that come out of that room in a direction
+     * other than its own. Hallways leaving in the same direction are regarded and evaluated as
+     * a regular stranger, not a kin.
+     */
+    private List<Area> allKins() {
+        List<Area> kins = new LinkedList<>(List.of(room));
+        for (Hallway hallway : room.hallways()) {
+            if (hallway.orientation() != orientation()) {
+                kins.add(hallway);
+            }
+        }
+        return kins;
     }
     //endregion
 
@@ -143,20 +147,21 @@ public class Hallway implements Area {
     //region Hallway Turn
     //----------------------------------------------------------------------------------------
     /**
-     * Randomly constructs and returns a new hallway at the end of a given hallway
-     * so as to create a L-shaped turn.
+     * Randomly constructs and returns a new hallway at the end of a given hallway so as to
+     * create a L-shaped turn.
      */
     public static Hallway hallwayTurn(TETile[][] world, Hallway hallway) {
         Direction dir = randomTurnDirection(hallway);
         Position pos = hallway.endPosition();
         int len = hallway.randomLength(dir, pos);
 
-        Hallway turn = new Hallway(null, dir, pos, len, hallway.RANDOM);
+        Hallway turn = new Hallway(world, null, dir, pos, len, hallway.RANDOM);
 
-        if (turn.isValid(hallway)) {
+        if (turn.isValid(List.of(hallway, hallway.room))) {
             turn.hallwayCreated = true;
-            turn.addToWorld(world);
+            turn.isTurn = true;
             AREAS.add(turn);
+            turn.addToWorld(world);
         }
 
         return turn;
@@ -166,12 +171,12 @@ public class Hallway implements Area {
      * Randomly returns a new direction to create an L-shaped turn with the given hallway.
      */
     private static Direction randomTurnDirection(Hallway hallway) {
-        int randomTurn = hallway.RANDOM.nextInt(2);
+        int randomTurn = hallway.enhancedRandom(2);
 
         if (hallway.orientation() == Orientation.HORIZONTAL) {
             return randomTurn == 0 ? Direction.NORTH : Direction.SOUTH;
         } else {
-            return randomTurn == 1 ? Direction.EAST : Direction.WEST;
+            return randomTurn == 0 ? Direction.EAST : Direction.WEST;
         }
     }
     //endregion
@@ -182,13 +187,14 @@ public class Hallway implements Area {
     /**
      * Returns true if a valid hallway instance is created.
      */
-    public boolean isHallwayCreated() {
+    @Override
+    public boolean isInstanceCreated() {
         return hallwayCreated;
     }
 
     /**
-     * Since this method is used for world drawing, it should return the upper-left tile
-     * of the hallway. It shouldn't return the tile from which a hallway actually starts.
+     * Since this method is used for world drawing, it should return the upper-left tile of the
+     * hallway. It shouldn't return the tile from which a hallway actually starts.
      */
     @Override
     public Position position() {
@@ -238,9 +244,23 @@ public class Hallway implements Area {
         return direction == Direction.NORTH || direction == Direction.SOUTH ? length : 1;
     }
 
+    public boolean isTurn() {
+        return isTurn;
+    }
+
     @Override
     public int numOfTiles() {
         return length;
+    }
+
+    @Override
+    public Random random() {
+        return RANDOM;
+    }
+
+    @Override
+    public int attempt() {
+        return attempt;
     }
     //endregion
 

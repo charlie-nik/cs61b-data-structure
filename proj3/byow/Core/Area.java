@@ -4,9 +4,7 @@ import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 import byow.Core.SpaceUtils.Position;
 
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 /**
  * An interface for rooms and hallways.
@@ -16,13 +14,13 @@ import java.util.Set;
  *    - addToWorld(): draws the area instance onto the world
  *    - isValid(): checks the validity of the newly created instance, especially whether it
  *      overlaps with preexisting instances
- *
+
  */
 public interface Area {
     Set<Area> AREAS = new HashSet<>();
-    int WIDTH = 80;
-    int HEIGHT = 30;
+    List<Room> ROOMS = new LinkedList<>();
 
+    boolean isInstanceCreated();
     Position position();
     int width();
     int height();
@@ -84,23 +82,26 @@ public interface Area {
     //endregion
 
 
-    //region Check Validity: Overlap
+    //region Check Validity: Overlap?
     //----------------------------------------------------------------------------------------
     /**
-     * Returns true if a valid area is generated, namely if it is substantial and doesn't
-     * overlap with other existing ones except the place it comes from, with which it
-     * necessarily overlaps.
+     * Returns true if a valid area is generated, namely if it is substantial and doesn't overlap
+     * with other existing ones except its kins, with which it's allowed to overlap.
+     *   - For a newly created room, it has one kin, ie. the hallway that leads to it.
+     *   - For a newly created hallway, its kins include the room it comes from, and all hallways
+     *     coming out of that room in a direction other than its own. Hallways leaving in the
+     *     same direction are regarded and evaluated as a regular stranger.
      */
-    default boolean isValid(Area origin) {
-        return width() > 0 && height() > 0 && !hasOverlap(origin);
+    default boolean isValid(List<Area> kins) {
+        return width() > 0 && height() > 0 && !hasOverlapExcept(kins);
     }
 
     /**
      * Returns true if the target area overlaps with existing ones, false otherwise.
      */
-    private boolean hasOverlap(Area origin) {
+    private boolean hasOverlapExcept(List<Area> kins) {
         for (Area curr : AREAS) {
-            if (!curr.equals(origin)) {
+            if (!kins.contains(curr)) {
                 if (xOverlap(this, curr) && yOverlap(this, curr)) {
                     return true;
                 }
@@ -131,4 +132,19 @@ public interface Area {
         return ((s1 >= s2) && (e1 <= s2)) || ((s1 >= e2) && (e1 <= e2));
     }
     //endregion
+
+
+    /**
+     * Makes sure the same Random (same seed) can generate different values for each attempt.
+     */
+    Random random();
+    int attempt();
+
+    default int enhancedRandom(int bound) {
+        int result = -1;
+        for (int i = 0; i <= attempt(); i++) {
+            result = random().nextInt(bound);
+        }
+        return result;
+    }
 }

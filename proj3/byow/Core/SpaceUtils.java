@@ -12,10 +12,8 @@ public class SpaceUtils {
     public static Orientation orientation(Direction dir) {
         if (dir == Direction.EAST || dir == Direction.WEST) {
             return Orientation.HORIZONTAL;
-        } else if (dir == Direction.NORTH || dir == Direction.SOUTH) {
-            return Orientation.VERTICAL;
         } else {
-            return null; // when direction is null (ie. starter-room)
+            return Orientation.VERTICAL;
         }
     }
 
@@ -39,4 +37,5 @@ public class SpaceUtils {
             y = newY;
         }
     }
+
 }
