@@ -1,5 +1,7 @@
 package byow.Core;
 
+import java.util.Objects;
+
 public class SpaceUtils {
 
     public enum Direction {
@@ -7,14 +9,6 @@ public class SpaceUtils {
     }
     public enum Orientation {
         HORIZONTAL, VERTICAL
-    }
-
-    public static Orientation orientation(Direction dir) {
-        if (dir == Direction.EAST || dir == Direction.WEST) {
-            return Orientation.HORIZONTAL;
-        } else {
-            return Orientation.VERTICAL;
-        }
     }
 
     public static class Position {
@@ -35,6 +29,20 @@ public class SpaceUtils {
         }
         public void setY(int newY) {
             y = newY;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Position position = (Position) o;
+            return x == position.x &&
+                    y == position.y;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(x, y);
         }
     }
 
