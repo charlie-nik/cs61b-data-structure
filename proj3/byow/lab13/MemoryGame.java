@@ -1,11 +1,9 @@
 package byow.lab13;
 
-import byow.Core.RandomUtils;
 import edu.princeton.cs.introcs.StdDraw;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.util.Arrays;
 import java.util.Random;
 
 public class MemoryGame {
@@ -21,19 +19,17 @@ public class MemoryGame {
                                                    "Too easy for you!", "Wow, so impressive!"};
 
     public static void main(String[] args) {
-        /*if (args.length < 1) {
+        if (args.length < 1) {
             System.out.println("Please enter a seed");
             return;
         }
 
-        int seed = Integer.parseInt(args[0]);*/
-        // Not sure how to use skeleton codes concerning seed entry... commented out.
-
-        MemoryGame game = new MemoryGame(40, 40);
+        long seed = Long.parseLong(args[0]);
+        MemoryGame game = new MemoryGame(40, 40, seed);
         game.startGame();
     }
 
-    public MemoryGame(int width, int height) {
+    public MemoryGame(int width, int height, long seed) {
         /* Sets up StdDraw so that it has a width by height grid of 16 by 16 squares as its canvas
          * Also sets up the scale so the top left is (0,0) and the bottom right is (width, height)
          */
@@ -47,22 +43,16 @@ public class MemoryGame {
         StdDraw.clear(Color.BLACK);
         StdDraw.enableDoubleBuffering();
 
-        rand = new Random();
+        rand = new Random(seed);
     }
 
     /**
      * Generates random string of letters of length N.
      */
     public String generateRandomString(int n) {
-        int numOfOptions = CHARACTERS.length;
-        double[] probabilities = new double[numOfOptions];
-        Arrays.fill(probabilities, 1.0 / numOfOptions);
-
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < n; i++) {
-            int index = RandomUtils.discrete(rand, probabilities);
-            char c = CHARACTERS[index];
-            sb.append(c);
+        while (sb.length() < n) {
+            sb.append(CHARACTERS[rand.nextInt(CHARACTERS.length)]);
         }
         return sb.toString();
     }
@@ -98,16 +88,10 @@ public class MemoryGame {
      */
     public void flashSequence(String letters) {
         for (int i = 0; i < letters.length(); i++) {
-            char c = letters.charAt(i);
-            drawFrame(Character.toString(c));
+            drawFrame(letters.substring(i, i + 1));
             StdDraw.pause(1000);        // display each letter for 1 second
-            if (i < letters.length() - 1) {
-                drawFrame("");
-                StdDraw.pause(500);     // 0.5 second break between characters
-            } else {
-                playerTurn = true;         // begin player's turn immediately after last letter
-                drawFrame("");
-            }
+            drawFrame("");
+            StdDraw.pause(500);         // 0.5 second break between characters
         }
     }
 
@@ -122,6 +106,7 @@ public class MemoryGame {
                 drawFrame(sb.toString());   // display what player has typed so far
             }
         }
+        StdDraw.pause(500);
         return sb.toString();
     }
 
@@ -132,18 +117,20 @@ public class MemoryGame {
         while (!gameOver) {
             playerTurn = false;
             drawFrame("Round: " + round);
-            StdDraw.pause(2000);
+            StdDraw.pause(1500);
 
             String prompt = generateRandomString(round);
             flashSequence(prompt);
-            String answer = solicitNCharsInput(round);
-            drawFrame(answer);
-            StdDraw.pause(500);     // let player's full answer stay on-screen for 0.5 second
 
-            if (!answer.equals(prompt)) {
+            playerTurn = true;
+            String userInput = solicitNCharsInput(round);
+
+            if (!userInput.equals(prompt)) {
                 gameOver = true;
                 drawFrame("Game over! You made it to round: " + round);
             } else {
+                drawFrame("Correct, well done!");
+                StdDraw.pause(1500);
                 round++;
             }
         }
