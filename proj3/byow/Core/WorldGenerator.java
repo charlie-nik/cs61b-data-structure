@@ -73,8 +73,8 @@ public class WorldGenerator {
                     Room r = buildRoom(turn);
                 }
             }
-            System.out.println("room " + randomRoom + " has " + room.hallways().size() + " " +
-                    "hallways\n");
+            // System.out.println("room " + randomRoom + " has " + room.hallways().size() + " " +
+                    //"hallways\n");
         }
     }
 
