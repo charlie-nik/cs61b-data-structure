@@ -1,6 +1,6 @@
 package byow.Graph;
 
-import byow.Core.SpaceUtils.*;
+import byow.BuildingBlock.Position;
 
 public class Edge {
     private final Position from, to;
