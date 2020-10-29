@@ -3,16 +3,16 @@
  *
  * Criteria of validity:
  *
- *    - 3 <= width/height <= 7
+ *    - 3 <= width/height <= 8
  *    - no overlap with existing rooms and hallways
  *
  * If a valid room is created within 3 attempts, draws it to the world. If not, quit.
  * FIXME: if fails, it gotta repeat a lot of stuff to make another try. RUNTIME OPTIMIZATION
  *
  *******************************************************************************************/
-package byow.Core.BuildingBlock;
+package byow.BuildingBlock;
 
-import byow.Core.SpaceUtils.*;
+import byow.BuildingBlock.Space.*;
 import byow.TileEngine.TETile;
 
 import java.util.*;
@@ -25,7 +25,7 @@ public class Room implements Area {
     private Map<Direction, List<Position>> borders;       // possible positions to start a hallway
     private List<Hallway> hallways;                       // all hallways from this room instance
     public int hallwayAttempt;                            // number of attempts to build hallway
-    private static final int MAX_LENGTH = 10;             // room class's size maximum limit
+    private static final int MAX_LENGTH = 8;             // room class's size maximum limit
     private static final int MIN_LENGTH = 3;              // room class's size minimum limit
 
     private final Random RANDOM;

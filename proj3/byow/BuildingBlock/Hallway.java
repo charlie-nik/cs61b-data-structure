@@ -10,9 +10,9 @@
  * If a valid hallway is created within 3 attempts, draws it to the world; if not, quit.
  *
  *******************************************************************************************/
-package byow.Core.BuildingBlock;
+package byow.BuildingBlock;
 
-import byow.Core.SpaceUtils.*;
+import byow.BuildingBlock.Space.*;
 import byow.TileEngine.TETile;
 
 import java.util.LinkedList;
@@ -23,11 +23,11 @@ import java.util.Random;
 public class Hallway implements Area {
     private final int WIDTH, HEIGHT;                    // width and height of WORLD
     private final Room room;                            // the room where hallway comes from
-    private final Position startPosition;               // hallway instance's start position
+    private final Position startPosition, endPosition;  // hallway instance's start and end position
     private final Direction direction;                  // hallway instance's direction
     private final int length;                           // hallway instance's length
     private boolean isTurn = false;                     // whether hallway is a L-turn or not
-    private static final int MAX_LENGTH = 8;            // hallway class's size limit
+    private static final int MAX_LENGTH = 10;           // hallway class's size limit
 
     private final Random RANDOM;
     private final int attempt;
@@ -69,6 +69,7 @@ public class Hallway implements Area {
         direction = dir == null ? randomDirection() : dir;
         startPosition = pos == null ? randomStartPos(direction) : pos;
         length = len < 0 ? randomLength(direction, startPosition) : len;
+        endPosition = computeEndPosition();
     }
     //endregion
 
@@ -125,6 +126,24 @@ public class Hallway implements Area {
 
         len = maxLength > 1 ? enhancedRandom(Math.min(MAX_LENGTH, maxLength) - 1) + 2 : len;
         return len;
+    }
+
+    /**
+     * Given the direction, start position, and length of a hallway, computes its end position.
+     */
+    private Position computeEndPosition() {
+        int x = startPosition.getX();
+        int y = startPosition.getY();
+
+        if (direction == Direction.EAST) {
+            return new Position(x + length - 1, y);
+        } else if (direction == Direction.WEST) {
+            return new Position(x - length + 1, y);
+        } else if (direction == Direction.NORTH) {
+            return new Position(x, y + length - 1);
+        } else {
+            return new Position(x, y - length + 1);
+        }
     }
 
     /**
@@ -185,9 +204,6 @@ public class Hallway implements Area {
 
     //region Accessors
     //----------------------------------------------------------------------------------------
-    /**
-     * Returns true if a valid hallway instance is created.
-     */
     @Override
     public boolean isInstanceCreated() {
         return hallwayCreated;
@@ -205,22 +221,10 @@ public class Hallway implements Area {
 
     /**
      * This method, on the other hand, should return the tile where the hallway actually ends
-     * since this information is used for room construction.
+     * since this information is used for subsequent room construction.
      */
     public Position endPosition() {
-        int x = startPosition.getX();
-        int y = startPosition.getY();
-
-        if (direction == Direction.EAST) {
-            return new Position(x + length - 1, y);
-        } else if (direction == Direction.WEST) {
-            return new Position(x - length + 1, y);
-        } else if (direction == Direction.NORTH) {
-            return new Position(x, y + length - 1);
-        } else {
-            return new Position(x, y - length + 1);
-        }
-
+        return endPosition;
     }
 
     public Direction direction() {

@@ -1,4 +1,4 @@
-package byow.Core.BuildingBlock;
+package byow.BuildingBlock;
 
 public class Door {
 }

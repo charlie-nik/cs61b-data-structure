@@ -1,10 +1,12 @@
-package byow.Core.BuildingBlock;
+package byow.BuildingBlock;
 
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
-import byow.Core.SpaceUtils.Position;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+
 
 /**
  * An interface for rooms and hallways.
@@ -17,7 +19,7 @@ import java.util.*;
 
  */
 public interface Area {
-    Set<Area> AREAS = new HashSet<>();
+    List<Area> AREAS = new LinkedList<>();
     List<Room> ROOMS = new LinkedList<>();
 
     boolean isInstanceCreated();
