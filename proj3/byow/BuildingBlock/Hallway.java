@@ -12,7 +12,6 @@
  *******************************************************************************************/
 package byow.Core.BuildingBlock;
 
-import byow.Core.SpaceUtils;
 import byow.Core.SpaceUtils.*;
 import byow.TileEngine.TETile;
 
@@ -48,6 +47,7 @@ public class Hallway implements Area {
         if (isValid(allKins())) {
             hallwayCreated = true;
             room.hallways().add(this);
+            room.borders().get(direction).remove(startPosition);
             AREAS.add(this);
             addToWorld(world);
         }
@@ -158,7 +158,7 @@ public class Hallway implements Area {
 
         Hallway turn = new Hallway(world, null, dir, pos, len, hallway.RANDOM);
 
-        if (turn.isValid(List.of(hallway, hallway.room))) {
+        if (turn.isValid(List.of(hallway))) {
             turn.hallwayCreated = true;
             turn.isTurn = true;
             AREAS.add(turn);

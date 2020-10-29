@@ -25,8 +25,7 @@ public class Room implements Area {
     private Map<Direction, List<Position>> borders;       // possible positions to start a hallway
     private List<Hallway> hallways;                       // all hallways from this room instance
     public int hallwayAttempt;                            // number of attempts to build hallway
-                                                               // from this room instance
-    private static final int MAX_LENGTH = 10;              // room class's size maximum limit
+    private static final int MAX_LENGTH = 10;             // room class's size maximum limit
     private static final int MIN_LENGTH = 3;              // room class's size minimum limit
 
     private final Random RANDOM;
@@ -45,7 +44,7 @@ public class Room implements Area {
         if (AREAS.isEmpty() || isValid(List.of(hallway))) {
             roomCreated = true;
             hallways = new LinkedList<>();
-            hallways.add(hallway);  // hallway may be null
+            hallways.add(hallway);  // null case of hallway is dealt with
             hallwayAttempt = 0;
             generateBorders();
 
@@ -111,90 +110,7 @@ public class Room implements Area {
         position = new Position(roomX, roomY);
     }
 
-    /*
-    private List<int[]> validCorners(Hallway hallway) {
-        List<int[]> corners = new LinkedList<>();
-
-        int xEndpoint = hallway.endPosition().getX();
-        int yEndpoint = hallway.endPosition().getY();
-        int roomX, roomY;
-
-        if (hallway.orientation() == Orientation.HORIZONTAL) {
-            if (hallway.direction() == Direction.EAST) {
-                roomX = xEndpoint + 1;
-            } else {
-                roomX = xEndpoint - 1;
-            }
-            for (int i = -height + 1; i < height; i++) {
-                int currY = yEndpoint + i;
-                if (isValidRoomCorner(roomX, currY, hallway)) {
-                    corners.add(new int[]{roomX, currY});
-                }
-            }
-         } else {
-            if (hallway.direction() == Direction.NORTH) {
-                roomY = yEndpoint + 1;
-            } else {
-                roomY = yEndpoint - 1;
-            }
-            for (int i = -width + 1; i < width; i++) {
-                int currX = xEndpoint + i;
-                if (isValidRoomCorner(currX, roomY, hallway)) {
-                    corners.add(new int[]{currX, roomY});
-                }
-            }
-        }
-
-        return corners;
-    }
-
-    private boolean isValidRoomCorner(int x, int y, Hallway hallway) {
-        if (x < 1 || x > WIDTH - 3 || y < 2 || y > HEIGHT - 2) {
-            return false;
-        }
-
-        List<Integer> xKin = new LinkedList<>();
-        List<Integer> yKin = new LinkedList<>();
-        int xEndpoint = hallway.endPosition().getX();
-        int yEndpoint = hallway.endPosition().getY();
-
-        if (hallway.orientation() == Orientation.HORIZONTAL) {
-            if (hallway.direction() == Direction.EAST) {
-                xKin.add(xEndpoint + 1);
-            } else {
-                xKin.add(xEndpoint - 1);
-            }
-            xKin.add(xEndpoint);
-            yKin.addAll(List.of(yEndpoint + 1, yEndpoint, yEndpoint - 1));
-        } else {
-            if (hallway.direction() == Direction.NORTH) {
-                yKin.add(yEndpoint + 1);
-            } else {
-                yKin.add(yEndpoint - 1);
-            }
-            yKin.add(yEndpoint);
-            xKin.addAll(List.of(xEndpoint - 1, xEndpoint, xEndpoint + 1));
-        }
-
-        return isValidPosition(x, y, xKin, yKin);
-    }
-
-    private boolean isValidPosition(int x, int y, List<Integer> xKin, List<Integer> yKin) {
-        for (int i = -1; i < 2; i++) {
-            for (int j = -1; j < 2; j++) {
-                int currX = x + i;
-                int currY = y + j;
-                if (!xKin.contains(currX) && !yKin.contains(currY)) {
-                    if (world[currX][currY] != Tileset.NOTHING) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-     */
+    // FIXME doc
     private void generateBorders() {
         borders = new HashMap<>();
         List<Position> north = new LinkedList<>();

@@ -118,7 +118,7 @@ public interface Area {
         int e1 = s1 + a1.width() + 1;
         int s2 = a2.position().getX() - 1;
         int e2 = s2 + a2.width() + 1;
-        return ((s1 <= s2) && (e1 >= s2)) || ((s1 <= e2) && (e1 >= e2));
+        return ((s1 >= s2) && (s1 <= e2)) || ((e1 >= s2) && (e1 <= e2));
     }
 
     /**
@@ -129,7 +129,7 @@ public interface Area {
         int e1 = s1 - a1.height() - 1;
         int s2 = a2.position().getY() + 1;
         int e2 = s2 - a2.height() - 1;
-        return ((s1 >= s2) && (e1 <= s2)) || ((s1 >= e2) && (e1 <= e2));
+        return ((s1 <= s2) && (s1 >= e2)) || ((e1 <= s2) && (e1 >= e2));
     }
     //endregion
 
