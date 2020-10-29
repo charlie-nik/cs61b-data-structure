@@ -8,19 +8,19 @@ import edu.princeton.cs.algs4.Stopwatch;
 
 import java.util.Random;
 
-public class WorldGenerator {
+public class World {
     private final int WIDTH;
     private final int HEIGHT;
     private int totalNumOfTiles;
-    private final Random RANDOM;
+    protected final Random RANDOM;
 
-    public final TETile[][] WORLD;
+    protected final TETile[][] BOARD;
 
 
-    public WorldGenerator(int width, int height, Random random) {
+    protected World(int width, int height, Random random) {
         WIDTH = width;
         HEIGHT = height;
-        WORLD = new TETile[width][height];
+        BOARD = new TETile[width][height];
         totalNumOfTiles = 0;
         RANDOM = random;
 
@@ -29,9 +29,9 @@ public class WorldGenerator {
     }
 
     private void fillBackground() {
-        for (int i = 0; i < WORLD.length; i++) {
-            for (int j = 0; j < WORLD[0].length; j++) {
-                WORLD[i][j] = Tileset.NOTHING;
+        for (int i = 0; i < BOARD.length; i++) {
+            for (int j = 0; j < BOARD[0].length; j++) {
+                BOARD[i][j] = Tileset.NOTHING;
             }
         }
     }
@@ -78,13 +78,13 @@ public class WorldGenerator {
     }
 
     private Area severalAttempts(Room room, Hallway hallway, int numAttempts) {
-        Area area = room == null ? new Room(WORLD, hallway, RANDOM, 0) :
-                                   new Hallway(WORLD, room, RANDOM);
+        Area area = room == null ? new Room(BOARD, hallway, RANDOM, 0) :
+                                   new Hallway(BOARD, room, RANDOM);
 
         int attempt = 1;
         while (attempt < numAttempts && !area.isInstanceCreated()) {
-            area = room == null ? new Room(WORLD, hallway, RANDOM, attempt) :
-                                  new Hallway(WORLD, room, RANDOM);
+            area = room == null ? new Room(BOARD, hallway, RANDOM, attempt) :
+                                  new Hallway(BOARD, room, RANDOM);
             attempt++;
         }
 
@@ -119,7 +119,7 @@ public class WorldGenerator {
     }
 
     private Hallway buildOneTurn(Hallway hallway) {
-        Hallway turn = Hallway.hallwayTurn(WORLD, hallway);
+        Hallway turn = Hallway.hallwayTurn(BOARD, hallway);
         if (turn.isInstanceCreated()) {
             totalNumOfTiles += turn.numOfTiles() - 1;
             return turn;
@@ -147,9 +147,9 @@ public class WorldGenerator {
 
         long seed = 999_999_999;
         Random r = new Random(seed);
-        WorldGenerator wg = new WorldGenerator(80, 30, r);
+        World wg = new World(80, 30, r);
 
-        teRenderer.renderFrame(wg.WORLD);
+        teRenderer.renderFrame(wg.BOARD);
         System.out.println("\nTotal time: " + sw.elapsedTime());
     }
 

@@ -1,5 +1,6 @@
-package byow.Core;
+package byow.BuildingBlock;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 public class SpaceUtils {
@@ -11,7 +12,7 @@ public class SpaceUtils {
         HORIZONTAL, VERTICAL
     }
 
-    public static class Position {
+    public static class Position implements Serializable {
         private int x;
         private int y;
         public Position(int x, int y) {
@@ -29,6 +30,19 @@ public class SpaceUtils {
         }
         public void setY(int newY) {
             y = newY;
+        }
+
+        public Position east() {
+            return new Position(x + 1, y);
+        }
+        public Position west() {
+            return new Position(x - 1, y);
+        }
+        public Position north() {
+            return new Position(x, y + 1);
+        }
+        public Position south() {
+            return new Position(x, y - 1);
         }
 
         @Override
