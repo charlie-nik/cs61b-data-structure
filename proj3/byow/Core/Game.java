@@ -5,7 +5,6 @@ import byow.BuildingBlock.Position;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 
-import java.io.Serializable;
 import java.util.Random;
 
 import static byow.BuildingBlock.Area.AREAS;
@@ -13,7 +12,7 @@ import static byow.BuildingBlock.Area.AREAS;
 /**
  * A Game object that includes a world and an avatar.
  */
-public class Game implements Serializable {
+public class Game {
     private final Random RANDOM;
     protected final TETile[][] WORLD;
     private Position avatar;

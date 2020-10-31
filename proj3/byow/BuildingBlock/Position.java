@@ -1,9 +1,8 @@
 package byow.BuildingBlock;
 
-import java.io.Serializable;
 import java.util.Objects;
 
-public class Position implements Serializable {
+public class Position {
     private int x;
     private int y;
     public Position(int x, int y) {
