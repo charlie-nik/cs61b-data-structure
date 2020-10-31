@@ -1,7 +1,9 @@
 package byow.Core;
 
 import byow.InputDemo.InputSource;
+import byow.InputDemo.RandomInputSource;
 import byow.InputDemo.StringInputDevice;
+import byow.SaveDemo.Editor;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
@@ -17,8 +19,8 @@ public class Engine {
     /* Feel free to change the width and height. */
     public static final int WIDTH = 80;
     public static final int HEIGHT = 30;
-    private InputSource inputSource;
     private Game game;
+    private StringBuilder gameHistory;
 
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
@@ -56,29 +58,43 @@ public class Engine {
         //
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
-        inputSource = new StringInputDevice(input);
+        InputSource inputSource = new StringInputDevice(input);
 
-        selectMainMenu();
+        selectMainMenu(inputSource);
 
         return game.WORLD;
+    }
+
+    public static void main(String[] args) {
+        Engine engine = new Engine();
+        engine.ter.renderFrame(engine.interactWithInputString("lww"));
     }
 
     /**
      * According to input key, either starts a new game, loads a previous game, or quits. Ignores
      * input keys that don't make sense.
      */
-    private void selectMainMenu() {
-        char key = cleanedNextKey();
+    private void selectMainMenu(InputSource inputSource) {
+        char key = cleanedNextKey(inputSource);
         while (!"NLQ".contains(String.valueOf(key)) && inputSource.possibleNextInput()) {
-            key = cleanedNextKey();
+            key = cleanedNextKey(inputSource);
         }
         switch (key) {
             case 'N':
-                startNewGame();
-                playGame();
+                gameHistory = new StringBuilder();
+                startNewGame(inputSource);
+                playGame(inputSource, true);
+
             case 'L':
-                loadGame();
-                playGame();
+                String lastGame = loadGame(inputSource);
+                InputSource lastInput = new StringInputDevice(lastGame);
+
+                gameHistory = new StringBuilder();
+                startNewGame(lastInput);
+                playGame(lastInput, false);
+
+                playGame(inputSource, true);
+
             case 'Q':
                 quitGame();
         }
@@ -87,45 +103,25 @@ public class Engine {
     /**
      * Generates a new Game instance.
      */
-    private void startNewGame() {
-        long seed = processSeed();
+    private void startNewGame(InputSource inputSource) {
+        long seed = processSeed(inputSource);
         game = new Game(WIDTH, HEIGHT, seed);
-    }
+        gameHistory.append(seed).append('S');
 
-    /**
-     * Processes input keys to get the seed. Makes sure seed value doesn't exceed Java's maximum
-     * integer value.
-     */
-    private long processSeed() {
-        StringBuilder sb = new StringBuilder();
-        while (inputSource.possibleNextInput()) {
-            char key = cleanedNextKey();
-            if (Character.isDigit(key)) {
-                sb.append(key);
-            } else if (key == 'S') {
-                break;
-            }
-        }
-        BigInteger input = new BigInteger(sb.toString());
-        if (input.compareTo(new BigInteger("2147483647")) > 0) {
-            return input.divideAndRemainder(new BigInteger("2147483647"))[1].intValue();
-        } else {
-            return input.intValue();
-        }
+        ter.initialize(WIDTH, HEIGHT);
+        ter.renderFrame(game.WORLD);
     }
 
     /**
      * Repeats playing game and updating TERender as the avatar moves around until the next input
      * key asks to quit or quit-save.
      */
-    private void playGame() {
-        ter.initialize(WIDTH, HEIGHT);
-        ter.renderFrame(game.WORLD);
-
-        while (true) {
+    private void playGame(InputSource inputSource, boolean gameOn) {
+        while (gameOn || inputSource.possibleNextInput()) {
             if (inputSource.possibleNextInput()) {
-                char key = cleanedNextKey();
+                char key = cleanedNextKey(inputSource);
                 game.play(key);
+                gameHistory.append(key);
                 ter.renderFrame(game.WORLD);
             }
         }
@@ -140,15 +136,14 @@ public class Engine {
             if (!file.exists()) {
                 file.createNewFile();
             }
-            FileOutputStream fs = new FileOutputStream(file);
-            ObjectOutputStream os = new ObjectOutputStream(fs);
-            os.writeObject(game);
+            FileOutputStream fos = new FileOutputStream(file);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(gameHistory.toString());
         } catch (FileNotFoundException e) {
             System.out.println("file not found");
             System.exit(0);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            System.out.println(e);
             System.exit(0);
         }
     }
@@ -156,26 +151,28 @@ public class Engine {
     /**
      * Loads Game instance from file. If file doesn't exist, creates a new Game instance.
      */
-    private void loadGame() {
+    private String loadGame(InputSource inputSource) {
         File file = new File("./save_data.txt");
         if (file.exists()) {
             try {
-                FileInputStream fs = new FileInputStream(file);
-                ObjectInputStream os = new ObjectInputStream(fs);
-                game = (Game) os.readObject();
+                FileInputStream fos = new FileInputStream(file);
+                ObjectInputStream oos = new ObjectInputStream(fos);
+                return (String) oos.readObject();
             } catch (FileNotFoundException e) {
                 System.out.println("file not found");
                 System.exit(0);
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println(e);
                 System.exit(0);
             } catch (ClassNotFoundException e) {
                 System.out.println("class not found");
                 System.exit(0);
             }
-        } else {
-            startNewGame();  // In the case no Game has been saved yet, starts a new one.
         }
+
+        return null;
+        // In the case no Game has been saved yet, starts a new one.
+                             // FIXME pop up seed entry window?
     }
 
     /**
@@ -197,7 +194,7 @@ public class Engine {
      * Returns the next key in uppercase unless it asks to quit ('Q') or quit-save (':Q') the game.
      * If that's the case, returns 0 (ie. null).
      */
-    private char cleanedNextKey() {
+    private char cleanedNextKey(InputSource inputSource) {
         char key = Character.toUpperCase(inputSource.getNextKey());
         if (key == ':' && inputSource.possibleNextInput()) {
             char nextKey = Character.toUpperCase(inputSource.getNextKey());
@@ -225,8 +222,26 @@ public class Engine {
         StdDraw.show();
     }
 
-    public static void main(String[] args) {
-        Engine engine = new Engine();
-        engine.ter.renderFrame(engine.interactWithInputString("lddww"));
+    /**
+     * Processes input keys to get the seed. Makes sure seed value doesn't exceed Java's maximum
+     * integer value.
+     */
+    private long processSeed(InputSource inputSource) {
+        StringBuilder sb = new StringBuilder();
+        while (inputSource.possibleNextInput()) {
+            char key = cleanedNextKey(inputSource);
+            if (Character.isDigit(key)) {
+                sb.append(key);
+            } else if (key == 'S') {
+                break;
+            }
+        }
+        BigInteger input = new BigInteger(sb.toString());
+        if (input.compareTo(new BigInteger("2147483647")) > 0) {
+            return input.divideAndRemainder(new BigInteger("2147483647"))[1].intValue();
+        } else {
+            return input.intValue();
+        }
     }
+
 }
