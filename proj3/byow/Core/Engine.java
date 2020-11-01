@@ -1,110 +1,117 @@
 package byow.Core;
 
-import byow.InputDemo.InputSource;
-import byow.InputDemo.RandomInputSource;
-import byow.InputDemo.StringInputDevice;
-import byow.SaveDemo.Editor;
+import byow.Input.*;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
-import byow.TileEngine.Tileset;
 import edu.princeton.cs.introcs.StdDraw;
 
 import java.awt.*;
 import java.io.*;
 import java.math.BigInteger;
-import java.util.Random;
 
+/**
+ * The primary class for user interaction. Accepting input from either keyboard or string entry,
+ * this class processes the input key and, at its prompt, starts a new game, loads a previous
+ * game, quits and saves the current game, or quits.
+ */
 public class Engine {
     TERenderer ter = new TERenderer();
-    /* Feel free to change the width and height. */
     public static final int WIDTH = 80;
     public static final int HEIGHT = 30;
+    private static final int MENU_WIDTH = 30;
+    private static final int MENU_HEIGHT = 30;
     private Game game;
     private StringBuilder gameHistory;
+    private boolean keyboard;
 
     /**
-     * Method used for exploring a fresh world. This method should handle all inputs,
-     * including inputs from the main menu.
+     * Method used for exploring a fresh world with keyboard input.
      */
     public void interactWithKeyboard() {
+        keyboard = true;
+        InputSource inputSource = new KeyboardInputSource();
+        selectMainMenu(inputSource);
     }
 
     /**
-     * Method used for autograding and testing your code. The input string will be a series
-     * of characters (for example, "n123sswwdasdassadwas", "n123sss:q", "lwww". The engine should
-     * behave exactly as if the user typed these characters into the engine using
-     * interactWithKeyboard.
-     *
-     * Recall that strings ending in ":q" should cause the game to quite save. For example,
-     * if we do interactWithInputString("n123sss:q"), we expect the game to run the first
-     * 7 commands (n123sss) and then quit and save. If we then do
-     * interactWithInputString("l"), we should be back in the exact same state.
-     *
-     * In other words, both of these calls:
-     *   - interactWithInputString("n123sss:q")
-     *   - interactWithInputString("lww")
-     *
-     * should yield the exact same world state as:
-     *   - interactWithInputString("n123sssww")
-     *
-     * @param input the input string to feed to your program
-     * @return the 2D TETile[][] representing the state of the world
+     * Method used for testing the code. Returns the final state of the world.
      */
     public TETile[][] interactWithInputString(String input) {
-        // TODO: Fill out this method so that it run the engine using the input
-        // passed in as an argument, and return a 2D tile representation of the
-        // world that would have been drawn if the same inputs had been given
-        // to interactWithKeyboard().
-        //
-        // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
-        // that works for many different input types.
-        InputSource inputSource = new StringInputDevice(input);
-
+        keyboard = false;
+        InputSource inputSource = new StringInputSource(input);
         selectMainMenu(inputSource);
 
         return game.WORLD;
     }
 
-    public static void main(String[] args) {
-        Engine engine = new Engine();
-        engine.ter.renderFrame(engine.interactWithInputString("lww"));
-    }
-
     /**
-     * According to input key, either starts a new game, loads a previous game, or quits. Ignores
-     * input keys that don't make sense.
+     * According to the input key, performs one of the following options (if input key does not
+     * correspond to any of the options, ignores it and inspects the next):
+     *    - 'N': start a new game
+     *    - 'L': load a previous game
+     *    - 'Q': quit
      */
     private void selectMainMenu(InputSource inputSource) {
-        char key = cleanedNextKey(inputSource);
-        while (!"NLQ".contains(String.valueOf(key)) && inputSource.possibleNextInput()) {
+        mainMenuWindow();
+        char key = 0;
+        while (inputSource.possibleNextKey()) {
             key = cleanedNextKey(inputSource);
+            if ("NLQ".contains(String.valueOf(key))) {
+                break;
+            }
         }
         switch (key) {
             case 'N':
                 gameHistory = new StringBuilder();
                 startNewGame(inputSource);
                 playGame(inputSource, true);
-
+                break;
             case 'L':
                 String lastGame = loadGame(inputSource);
-                InputSource lastInput = new StringInputDevice(lastGame);
-
+                InputSource lastInput = new StringInputSource(lastGame);
                 gameHistory = new StringBuilder();
                 startNewGame(lastInput);
                 playGame(lastInput, false);
-
                 playGame(inputSource, true);
-
+                break;
             case 'Q':
                 quitGame();
+                break;
         }
     }
 
     /**
-     * Generates a new Game instance.
+     * If interacting with keyboard, opens a main menu window showing three options.
+     */
+    private void mainMenuWindow() {
+        if (!keyboard) {
+            return;
+        }
+        StdDraw.setCanvasSize(MENU_WIDTH * 16, MENU_WIDTH * 16);
+        StdDraw.setXscale(0, MENU_WIDTH);
+        StdDraw.setYscale(0, MENU_WIDTH);
+        StdDraw.clear(Color.BLACK);
+
+        Font title = new Font("Monoco", Font.BOLD, 25);
+        StdDraw.setFont(title);
+        StdDraw.setPenColor(Color.WHITE);
+        StdDraw.text((float) MENU_WIDTH / 2, 19, "CS61B: The Game");
+
+        Font option = new Font("Monoco", Font.PLAIN, 20);
+        StdDraw.setFont(option);
+        StdDraw.text((float) MENU_WIDTH / 2, 13, "New Game (N)");
+        StdDraw.text((float) MENU_WIDTH / 2, 11, "Load Game (L)");
+        StdDraw.text((float) MENU_WIDTH / 2, 9, "Quit (Q)");
+
+        StdDraw.show();
+    }
+
+    /**
+     * Generates a new Game instance using the input seed and displays the world onscreen.
      */
     private void startNewGame(InputSource inputSource) {
         long seed = processSeed(inputSource);
+
         game = new Game(WIDTH, HEIGHT, seed);
         gameHistory.append(seed).append('S');
 
@@ -113,12 +120,67 @@ public class Engine {
     }
 
     /**
-     * Repeats playing game and updating TERender as the avatar moves around until the next input
-     * key asks to quit or quit-save.
+     * Looks at the next input key and returns it if it's a valid seed input or if it's 'S'.
+     * Otherwise, returns 0 (ie. null).
+     */
+    private char enterSeed(InputSource inputSource) {
+        if (inputSource.possibleNextKey()) {
+            char key = cleanedNextKey(inputSource);
+            if (Character.isDigit(key) || key == 'S') {
+                return key;
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Processes input keys to get the seed. Makes sure seed value doesn't exceed Java's maximum
+     * integer value (32-bit).
+     */
+    private long processSeed(InputSource inputSource) {
+        enterSeedWindow("");
+        StringBuilder sb = new StringBuilder();
+        while (inputSource.possibleNextKey()) {
+            char key = enterSeed(inputSource);
+            if (Character.isDigit(key)) {
+                sb.append(key);
+                enterSeedWindow(sb.toString());
+            } else if (key == 'S') {
+                break;
+            }
+        }
+        BigInteger input = new BigInteger(sb.toString());
+        if (input.compareTo(new BigInteger("2147483647")) > 0) {
+            return input.divideAndRemainder(new BigInteger("2147483647"))[1].intValue();
+        } else {
+            return input.intValue();
+        }
+    }
+
+    /**
+     * If interacting with keyboard, opens a window that prompts the user to enter a seed and then
+     * displays their entry.
+     */
+    public void enterSeedWindow(String seed) {
+        if (!keyboard) {
+            return;
+        }
+        StdDraw.clear(Color.BLACK);
+        Font prompt = new Font("Monoco", Font.PLAIN, 20);
+        StdDraw.setFont(prompt);
+        StdDraw.setPenColor(Color.WHITE);
+        StdDraw.text((float) MENU_WIDTH / 2, 11.5, "Enter a seed and press S");
+        StdDraw.text((float) MENU_WIDTH / 2, 9, seed);
+        StdDraw.show();
+    }
+
+    /**
+     * Repeats playing game and updating TERender as the avatar moves around - until the next input
+     * key asks to quit or quit-save, which is being monitored in cleanedNextKey() method.
      */
     private void playGame(InputSource inputSource, boolean gameOn) {
-        while (gameOn || inputSource.possibleNextInput()) {
-            if (inputSource.possibleNextInput()) {
+        while (gameOn || inputSource.possibleNextKey()) {
+            if (inputSource.possibleNextKey()) {
                 char key = cleanedNextKey(inputSource);
                 game.play(key);
                 gameHistory.append(key);
@@ -128,7 +190,7 @@ public class Engine {
     }
 
     /**
-     * Saves Game instance to file.
+     * Saves the String value of gameHistory to file.
      */
     private void saveGame() {
         File file = new File("./save_data.txt");
@@ -149,7 +211,8 @@ public class Engine {
     }
 
     /**
-     * Loads Game instance from file. If file doesn't exist, creates a new Game instance.
+     * Loads gameHistory from file. If file doesn't exist, creates a new Game instance.
+     * FIXME: no need to play the whole thing through !!!
      */
     private String loadGame(InputSource inputSource) {
         File file = new File("./save_data.txt");
@@ -196,7 +259,7 @@ public class Engine {
      */
     private char cleanedNextKey(InputSource inputSource) {
         char key = Character.toUpperCase(inputSource.getNextKey());
-        if (key == ':' && inputSource.possibleNextInput()) {
+        if (key == ':' && inputSource.possibleNextKey()) {
             char nextKey = Character.toUpperCase(inputSource.getNextKey());
             if (nextKey == 'Q') {
                 quitSaveGame();
@@ -207,41 +270,6 @@ public class Engine {
             return key;
         }
         return 0;
-    }
-
-    public void mainMenu() {
-        int width = 40, height = 40;
-        StdDraw.setCanvasSize(width * 16, height * 16);
-        StdDraw.setXscale(0, width);
-        StdDraw.setYscale(0, height);
-        Font title = new Font("Monoco", Font.BOLD, 30);
-        StdDraw.setFont(title);
-        StdDraw.setPenColor(Color.WHITE);
-        StdDraw.text((float) width / 2, (float) height / 2, "CS61B: The Game");
-        StdDraw.clear(Color.BLACK);
-        StdDraw.show();
-    }
-
-    /**
-     * Processes input keys to get the seed. Makes sure seed value doesn't exceed Java's maximum
-     * integer value.
-     */
-    private long processSeed(InputSource inputSource) {
-        StringBuilder sb = new StringBuilder();
-        while (inputSource.possibleNextInput()) {
-            char key = cleanedNextKey(inputSource);
-            if (Character.isDigit(key)) {
-                sb.append(key);
-            } else if (key == 'S') {
-                break;
-            }
-        }
-        BigInteger input = new BigInteger(sb.toString());
-        if (input.compareTo(new BigInteger("2147483647")) > 0) {
-            return input.divideAndRemainder(new BigInteger("2147483647"))[1].intValue();
-        } else {
-            return input.intValue();
-        }
     }
 
 }
