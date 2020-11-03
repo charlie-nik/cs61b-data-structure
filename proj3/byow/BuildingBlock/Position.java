@@ -2,24 +2,25 @@ package byow.BuildingBlock;
 
 import java.util.Objects;
 
+/**
+ * Utility class to designate a position. Public instance methods include: returning the instance's
+ * x-coordinate or y-coordinate, and returning the position to the east, west, north, or west of
+ * the instance. If two positions have the same x-coordinate and y-coordinate, they are ruled as
+ * equal.
+ */
 public class Position {
-    private int x;
-    private int y;
+    private final int x;
+    private final int y;
     public Position(int x, int y) {
         this.x = x;
         this.y = y;
     }
+
     public int getX() {
         return x;
     }
     public int getY() {
         return y;
-    }
-    public void setX(int newX) {
-        x = newX;
-    }
-    public void setY(int newY) {
-        y = newY;
     }
 
     public Position east() {
