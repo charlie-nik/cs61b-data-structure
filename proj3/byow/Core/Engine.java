@@ -3,7 +3,9 @@ package byow.Core;
 import byow.Input.*;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
+import byow.TileEngine.Tileset;
 import edu.princeton.cs.introcs.StdDraw;
+import edu.princeton.cs.introcs.Stopwatch;
 
 import java.awt.*;
 import java.io.*;
@@ -62,16 +64,12 @@ public class Engine {
         }
         switch (key) {
             case 'N':
-                gameHistory = new StringBuilder();
-                startNewGame(inputSource);
+                long seed = processSeed(inputSource);
+                startNewGame(seed);
                 playGame(inputSource, true);
                 break;
             case 'L':
-                String lastGame = loadGame(inputSource);
-                InputSource lastInput = new StringInputSource(lastGame);
-                gameHistory = new StringBuilder();
-                startNewGame(lastInput);
-                playGame(lastInput, false);
+                loadGame(inputSource);
                 playGame(inputSource, true);
                 break;
             case 'Q':
@@ -81,7 +79,7 @@ public class Engine {
     }
 
     /**
-     * If interacting with keyboard, opens a main menu window showing three options.
+     * If interacting with keyboard, opens a main menu window displaying three options.
      */
     private void mainMenuWindow() {
         if (!keyboard) {
@@ -109,10 +107,9 @@ public class Engine {
     /**
      * Generates a new Game instance using the input seed and displays the world onscreen.
      */
-    private void startNewGame(InputSource inputSource) {
-        long seed = processSeed(inputSource);
-
+    private void startNewGame(long seed) {
         game = new Game(WIDTH, HEIGHT, seed);
+        gameHistory = new StringBuilder();
         gameHistory.append(seed).append('S');
 
         ter.initialize(WIDTH, HEIGHT);
@@ -134,8 +131,8 @@ public class Engine {
     }
 
     /**
-     * Processes input keys to get the seed. Makes sure seed value doesn't exceed Java's maximum
-     * integer value (32-bit).
+     * Displays user's seed entry onscreen and processes input keys to get the seed. Makes sure
+     * seed value doesn't exceed Java's maximum integer value (32-bit).
      */
     private long processSeed(InputSource inputSource) {
         enterSeedWindow("");
@@ -145,7 +142,7 @@ public class Engine {
             if (Character.isDigit(key)) {
                 sb.append(key);
                 enterSeedWindow(sb.toString());
-            } else if (key == 'S') {
+            } else if (key == 'S' && sb.length() > 0) {
                 break;
             }
         }
@@ -169,24 +166,87 @@ public class Engine {
         Font prompt = new Font("Monoco", Font.PLAIN, 20);
         StdDraw.setFont(prompt);
         StdDraw.setPenColor(Color.WHITE);
-        StdDraw.text((float) MENU_WIDTH / 2, 11.5, "Enter a seed and press S");
+        StdDraw.text((float) MENU_WIDTH / 2, 11.5, "Enter a seed and press 'S'");
         StdDraw.text((float) MENU_WIDTH / 2, 9, seed);
         StdDraw.show();
     }
 
     /**
      * Repeats playing game and updating TERender as the avatar moves around - until the next input
-     * key asks to quit or quit-save, which is being monitored in cleanedNextKey() method.
+     * key asks to quit or quit-save, which is not being monitored here but in cleanedNextKey()
+     * method.
      */
     private void playGame(InputSource inputSource, boolean gameOn) {
         while (gameOn || inputSource.possibleNextKey()) {
-            if (inputSource.possibleNextKey()) {
+            ter.renderFrame(game.WORLD);
+            headUpDisplay();
+            if (StdDraw.hasNextKeyTyped()) {
                 char key = cleanedNextKey(inputSource);
                 game.play(key);
                 gameHistory.append(key);
                 ter.renderFrame(game.WORLD);
             }
+            if (game.gameWon) {
+                gameWonWindow();
+                while (true) {
+                    cleanedNextKey(inputSource);
+                }
+            }
         }
+    }
+
+    /**
+     * Displays a Head Up Display that includes a description of the moused-over tile, and a
+     * count of the number of remaining wild flowers to be plucked.
+     */
+    private void headUpDisplay() {
+        int x = (int) StdDraw.mouseX();
+        int y = (int) StdDraw.mouseY();
+        if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
+            return;
+        }
+        TETile tile = game.WORLD[x][y];
+
+        if (tile == Tileset.NOTHING) {
+            writeHUD("nothing - unknown, unlimited, free");
+        } else if (tile == Tileset.FLOOR) {
+            writeHUD("floor - harmless, taciturn, reliable");
+        } else if (tile == Tileset.AVATAR) {
+            writeHUD("you - homeless, nameless, clueless");
+        } else if (tile == Tileset.FLOWER) {
+            writeHUD("flower - pick, pluck, collect");
+        } else if (tile == Tileset.LOCKED_DOOR) {
+            writeHUD("locked door - desirable, inviting, unreachable");
+        } else if (tile == Tileset.UNLOCKED_DOOR) {
+            writeHUD("unlocked door - tamed, available, penetrable");
+        } else {
+            writeHUD("wall - cold, cruel, firm");
+        }
+    }
+
+    /**
+     * Displays tile description on the upper left corner and the number of remaining wild
+     * flowers in the lower left corner.
+     */
+    private void writeHUD(String s) {
+        StdDraw.setPenColor(Color.WHITE);
+        StdDraw.setFont(new Font("Monoco", Font.PLAIN, 15));
+        StdDraw.textLeft(1, 28.5, s);
+        StdDraw.textLeft(1, 1.5, "wild flowers: " + game.remainingFlowers);
+        StdDraw.show();
+        Stopwatch sw = new Stopwatch();
+    }
+
+    /**
+     * When the game is won, displays a "You've won!" celebration-affirmation thingy.
+     */
+    private void gameWonWindow() {
+        StdDraw.clear(Color.BLACK);
+        Font font = new Font("Monoco", Font.BOLD, 50);
+        StdDraw.setFont(font);
+        StdDraw.setPenColor(Color.WHITE);
+        StdDraw.text((float) WIDTH / 2, (float) HEIGHT / 2, "You've won!");
+        StdDraw.show();
     }
 
     /**
@@ -211,31 +271,55 @@ public class Engine {
     }
 
     /**
-     * Loads gameHistory from file. If file doesn't exist, creates a new Game instance.
-     * FIXME: no need to play the whole thing through !!!
+     * Loads gameHistory from file. If file doesn't exist, opens a notification window and then
+     * returns to main menu.
      */
-    private String loadGame(InputSource inputSource) {
+    private void loadGame(InputSource inputSource) {
         File file = new File("./save_data.txt");
-        if (file.exists()) {
-            try {
-                FileInputStream fos = new FileInputStream(file);
-                ObjectInputStream oos = new ObjectInputStream(fos);
-                return (String) oos.readObject();
-            } catch (FileNotFoundException e) {
-                System.out.println("file not found");
-                System.exit(0);
-            } catch (IOException e) {
-                System.out.println(e);
-                System.exit(0);
-            } catch (ClassNotFoundException e) {
-                System.out.println("class not found");
-                System.exit(0);
-            }
+        if (!file.exists()) {
+            loadFailureWindow();
+            selectMainMenu(inputSource);
+            return;
         }
+        String lastGame = null;
+        try {
+            FileInputStream fos = new FileInputStream(file);
+            ObjectInputStream oos = new ObjectInputStream(fos);
+            lastGame = (String) oos.readObject();
+        } catch (FileNotFoundException e) {
+            System.out.println("file not found");
+            System.exit(0);
+        } catch (IOException e) {
+            System.out.println(e);
+            System.exit(0);
+        } catch (ClassNotFoundException e) {
+            System.out.println("class not found");
+            System.exit(0);
+        }
+        InputSource lastInput = new StringInputSource(lastGame);
+        long seed = processSeed(lastInput);
+        startNewGame(seed);
+        playGame(lastInput, false);
+    }
 
-        return null;
-        // In the case no Game has been saved yet, starts a new one.
-                             // FIXME pop up seed entry window?
+    /**
+     * If no previous game has been saved, displays a load failure window that informs the user
+     * of the failure and returns to the main menu.
+     */
+    private void loadFailureWindow() {
+        if (!keyboard) {
+            return;
+        }
+        StdDraw.clear(Color.BLACK);
+        Font font = new Font("Monoco", Font.PLAIN, 20);
+        StdDraw.setFont(font);
+        StdDraw.setPenColor(Color.WHITE);
+        StdDraw.text((float) MENU_WIDTH / 2, (float) MENU_HEIGHT / 2 + 1,
+                "No previous game has been saved.");
+        StdDraw.text((float) MENU_WIDTH / 2, (float) MENU_HEIGHT / 2 - 1,
+                "Please start a new game.");
+        StdDraw.show();
+        StdDraw.pause(4000);
     }
 
     /**

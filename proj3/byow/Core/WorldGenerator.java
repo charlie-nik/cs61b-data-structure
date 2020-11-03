@@ -4,24 +4,33 @@ import byow.BuildingBlock.*;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
-import edu.princeton.cs.algs4.Stopwatch;
 
 import java.util.Random;
 
+/**
+ * Primary class for random world generation. The algorithm is as follows. First, builds a
+ * starter room. Second, builds a hallway coming out of starter-room, then another room at the end
+ * of the first hallway. Third, randomly selects an existing room, builds a hallway out of it,
+ * and a room at the end of the hallway. Repeats step 3 until the total number of occupied tiles
+ * reaches LOAD_FACTOR.
+ */
 public class WorldGenerator {
     private final int WIDTH;
     private final int HEIGHT;
     private final Random RANDOM;
 
     public final TETile[][] WORLD;
+    private final double LOAD_FACTOR = 0.22;
     private int totalNumOfTiles;
 
-
+    /**
+     * Initializes a TETile[][] board. Fills every tile with NOTHING, and then replaces tiles
+     * with FLOOR and WALL according to the world generation algorithm.
+     */
     public WorldGenerator(int width, int height, Random random) {
         WIDTH = width;
         HEIGHT = height;
         RANDOM = random;
-
         WORLD = new TETile[width][height];
         totalNumOfTiles = 0;
 
@@ -29,6 +38,9 @@ public class WorldGenerator {
         generateWorld();
     }
 
+    /**
+     * Fills every tile of the world with NOTHING.
+     */
     private void fillBackground() {
         for (int i = 0; i < WORLD.length; i++) {
             for (int j = 0; j < WORLD[0].length; j++) {
@@ -37,121 +49,112 @@ public class WorldGenerator {
         }
     }
 
-    private void generateWorld() {
-        // construct first room: no limit on maximum number of attempts, try until succeed
-        Area starterRoom = severalAttempts(null, null, Integer.MAX_VALUE);
-
-        // for (int i = 0; i < 10; i++)
-        while (load() < 0.25) {
-            int randomRoom = RANDOM.nextInt(Area.ROOMS.size());
-            Room room = Area.ROOMS.get(randomRoom);
-            int numHallways = room.hallways().size();
-            int numFailedAttempts = room.hallwayAttempt - numHallways;
-            int rand2 = randomRoom;
-            if (numHallways > 2 || numFailedAttempts > 6) { // refined selection is ROOMS.size > 1
-                rand2 = RANDOM.nextInt(Area.ROOMS.size()); // FIXME if rand 2 != rand 1
-            }
-            Room room1 = Area.ROOMS.get(randomRoom);
-            int numHallways1 = room1.hallways().size();
-            int numFailedAttempts1 = room1.hallwayAttempt - numHallways1;
-            if (numHallways1 < numHallways || numFailedAttempts1 < numFailedAttempts) {
-                room = room1;
-                randomRoom = rand2;
-            }
-            // FIXME if no room is created at its end, delete hallway
-
-            // build hallway within 3 attempts
-            Hallway hallway = (Hallway) severalAttempts(room, null, 3);
-            if (hallway.isInstanceCreated()) {
-
-                // 33% chance of building hallway turn (almost 100% rate of successful construction)
-                Hallway turn = buildTurn(hallway, 0.5);
-                if (!turn.isTurn() || turn.length() > 2) {
-
-                    // building new room at the end of hallway
-                    // 100% of building new room (lower rate of successful construction, though)
-                    Room r = buildRoom(turn);
-                }
-            }
-            // System.out.println("room " + randomRoom + " has " + room.hallways().size() + " " +
-                    //"hallways\n");
-        }
-    }
-
-    private Area severalAttempts(Room room, Hallway hallway, int numAttempts) {
-        Area area = room == null ? new Room(WORLD, hallway, RANDOM, 0) :
-                                   new Hallway(WORLD, room, RANDOM);
-
-        int attempt = 1;
-        while (attempt < numAttempts && !area.isInstanceCreated()) {
-            area = room == null ? new Room(WORLD, hallway, RANDOM, attempt) :
-                                  new Hallway(WORLD, room, RANDOM);
-            attempt++;
-        }
-
-        totalNumOfTiles += area.isInstanceCreated() ? area.numOfTiles() : 0;
-        return area;
-    }
-
     /**
-     * 33% chance of choosing to build a hallway turn (in one attempt, since construction success
-     * rate is very high). If a valid hallway turn is built, returns it. Otherwise, returns the
-     * original hallway.
-     * // FIXME number of turns
+     * The primary method for world generation. First, builds a starter room. Second, repeats
+     * the following steps until the number of occupied tiles reaches LOAD_FACTOR:
+     *      A. randomly choose an existing room
+     *      B. try building a hallway out of it
+     *          i.  if succeeds, there's a 50% chance of choosing to try building a hallway turn
+     *          ii. if succeeds, try building a room at the end of the hallway
      */
-    private Hallway buildTurn(Hallway hallway, double probability) {
-        if (hallway.length() < 3) {
-            return hallway;
+    private void generateWorld() {
+        buildRoom(null);
+        while (load() < LOAD_FACTOR) {
+            int randomIndex = RANDOM.nextInt(Area.ROOMS.size());
+            Room room = Area.ROOMS.get(randomIndex);
+            Hallway hallway = buildHallway(room);
+            if (hallway != null) {
+                hallway = buildTurn(hallway);
+                buildRoom(hallway);
+            }
         }
-        boolean buildTurn = RandomUtils.bernoulli(RANDOM, probability);
-        if (buildTurn) {
-            hallway = buildSeveralTurns(hallway);
-        }
-        return hallway;
-    }
-
-    private Hallway buildSeveralTurns(Hallway hallway) {
-        int numOfTurns = RANDOM.nextInt(2) + 1;
-        Hallway turn = hallway;
-        for (int i = 0; i < numOfTurns; i++) {
-            turn = buildOneTurn(turn);
-        }
-        return turn;
-    }
-
-    private Hallway buildOneTurn(Hallway hallway) {
-        Hallway turn = Hallway.hallwayTurn(WORLD, hallway);
-        if (turn.isInstanceCreated()) {
-            totalNumOfTiles += turn.numOfTiles() - 1;
-            return turn;
-        }
-        return hallway;
     }
 
     /**
-     * 100% chance of choosing to build a new room (within 6 attempts, since construction success
-     * rate can be low).
+     * Tries building a new room. In the case of starter room, tries for infinite times until
+     * succeed. In the case of regular rooms, tries for 6 attempts - 6 but not less because
+     * construction success rate can be low.
      */
     private Room buildRoom(Hallway hallway) {
-        return (Room) severalAttempts(null, hallway, 6);
+        if (hallway == null) {
+            return (Room) multipleAttempts(null, hallway, Integer.MAX_VALUE);
+        } else {
+            return (Room) multipleAttempts(null, hallway, 6);
+        }
     }
 
+    /**
+     * Tries building a new hallway within 3 attempts.
+     */
+    private Hallway buildHallway(Room room) {
+        return (Hallway) multipleAttempts(room, null, 3);
+    }
+
+    /**
+     * Tries building an area instance within the given number of attempts. If an instance is
+     * successfully created, increases the total number of occupied tiles.
+     */
+    private Area multipleAttempts(Room room, Hallway hallway, int numAttempts) {
+        while (numAttempts > 0) {
+            Area area = room == null ? new Room(WORLD, hallway, RANDOM) :
+                                       new Hallway(WORLD, room, RANDOM);
+            if (area.isInstanceCreated()) {
+                totalNumOfTiles += area.numOfTiles();
+                return area;
+            }
+            numAttempts--;
+        }
+        return null;
+    }
+
+    /**
+     * There's a 50% chance of choosing to build a hallway turn (in one attempt, since
+     * construction success rate is very high). If a valid hallway turn is built, returns it.
+     * Otherwise, returns the original hallway.
+     */
+    private Hallway buildTurn(Hallway hallway) {
+        boolean buildTurn = RandomUtils.bernoulli(RANDOM, 0.5);
+        if (buildTurn) {
+            hallway = buildMultipleTurns(hallway);
+        }
+        return hallway;
+    }
+
+    /**
+     * Randomly determines how many turns are to be constructed: at most 2, at least 1. If hallway
+     * turn(s) is created, returns it, otherwise returns the original hallway.
+     */
+    private Hallway buildMultipleTurns(Hallway hallway) {
+        int numOfTurns = RANDOM.nextInt(2) + 1;
+        for (int i = 0; i < numOfTurns; i++) {
+            Hallway turn = Hallway.hallwayTurn(WORLD, hallway);
+            if (turn.isInstanceCreated()) {
+                totalNumOfTiles += turn.numOfTiles() - 1;
+                hallway = turn;
+            }
+        }
+        return hallway;
+    }
+
+    /**
+     * Returns the percentage of occupied tiles against the total number of tiles.
+     */
     private double load() {
         return (float) totalNumOfTiles / (WIDTH * HEIGHT);
     }
 
+    /**
+     * For testing.
+     */
     public static void main(String[] args) {
-        Stopwatch sw = new Stopwatch();
-
         TERenderer teRenderer = new TERenderer();
         teRenderer.initialize(80, 30);
 
-        long seed = 999_999_999;
+        long seed = 818;
         Random r = new Random(seed);
         WorldGenerator wg = new WorldGenerator(80, 30, r);
 
         teRenderer.renderFrame(wg.WORLD);
-        System.out.println("\nTotal time: " + sw.elapsedTime());
     }
 
 }
