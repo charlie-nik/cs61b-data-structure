@@ -11,32 +11,49 @@ import edu.princeton.cs.introcs.Stopwatch;
 import java.util.*;
 
 /**
- * The primary class for game playing. A Game instance has a randomly generated world, within
- * which there's an avatar, a locked door, and three flowers, all initialized at random positions.
- * Game class monitors the movement of the avatar and updates the world accordingly.
- * FIXME doc game level
+ * The primary class for game playing. A Game instance starts at level 0, keeps track of the
+ * current game level, and builds a new world every time a new level is launched. Every world has
+ * an avatar, a door, and three flowers as its basic setup. In order to win the game, player
+ * collects all three flowers in order to unlock the door, and then passes through the door. A
+ * world may also have a teleport or hostile NPCs, depending on the game level. All game objects
+ * are initialized at random, unique positions.
+ *      Level 1: 3 flowers
+ *      Level 2: 3 flowers, 1 teleport
+ *      Level 3: 3 flowers, 1 teleport, 1 enemy (1 move per second)
+ *      Level 4: 3 flowers, 1 teleport, 1 enemy (1 move per 3/4 second)
+ *      Level 5: 3 flowers, 1 teleport, 3 enemy (1 move per 3/4 second)
+ *      level 6: 3 flowers, 1 teleport, 3 enemy (1 move per 1/2 second)
+ *      level 7: 3 flowers, 1 teleport, 3 enemy (1 move per 1/2 second), limited vision
+ *
+ * The game class is also responsible for monitoring and executing the movement of avatar by
+ * accordingly updating the world. Avatar is free to move to all FLOOR tiles and all passable
+ * objects (flowers, locked/unlocked door, teleport entry & exit), although special procedures are
+ * triggered when moved to certain tiles. See class for details.
+ *
+ * The game class is responsible for executing the movement of hostile NPCs as well. At every
+ * step, NPCs move according to A* algorithm which calculates the shortest path from them to
+ * avatar. NPCs can move through all passable objects, too. Once an NPC catches the avatar, the
+ * game is lost.
  */
 public class Game {
     private Random RANDOM;                              // a random specific to the current level
     protected TETile[][] WORLD;                         // a world specific to the current level
     protected int level;                                // current game level
-    protected int remainingFlowers;                     // number of flowers to still be collected
     protected int gameState;                            // 0 == game on, 1 == won, -1 == lost
+    protected int remainingFlowers;                     // number of flowers to still be collected
 
+    private HashMap<Position, TETile> passableObjects;  // things that avatar & NPC can walk through
     private Position avatar;
     private Position door;
     private Position teleportExit;
-
-    private List<Position> enemies;                     // list of enemies
+    private List<Position> enemies;                     // list of hostile NPCs
+    private EnemyGraph enemyGraph;                      // a graph of enemies's possible paths
     private Stopwatch enemyStopwatch;                   // enemies operate on an independent time
     private double enemyLastMove;                       // the time of enemies's last move
-    private EnemyGraph graph;                           // a graph of enemies's possible paths
-    private HashMap<Position, TETile> passableObjects;  // a map of objects enemies can walk over
-                                                        // when calculating shortest paths
 
     /**
-     * Constructs a Game instance by generating a uniquely random world and initializing all game
-     * objects (ie. avatar, door, flowers).
+     * The Game constructor takes in a seed and saves it as its unique Random object. Every Game
+     * instance starts at level 0.
      */
     public Game(long seed) {
         RANDOM = new Random(seed);
@@ -44,24 +61,33 @@ public class Game {
         level = 0;
     }
 
+    /**
+     * Every time a new level is launched, randomly generates a new world. There are two
+     * steps: first, use WorldGenerator to create a new world; second, initialize game objects
+     * according to the game level. Since RANDOM is deterministically random, refreshes RANDOM
+     * when necessary.
+     */
     protected void buildNewWorld() {
         for (int i = 1; i < level; i++) {
             refreshRandom();
         }
+
         WorldGenerator god = new WorldGenerator(Engine.WIDTH, Engine.HEIGHT, RANDOM);
         while (!god.isWorldGenerated()) {
             Area.AREAS.clear();
             Area.ROOMS.clear();
             god.generateWorld();
+
             if (!god.isWorldGenerated()) {
                 UI.worldGenerationFailureWindow();
-                refreshRandom();  // try for a new seed
+                refreshRandom();
                 god = new WorldGenerator(Engine.WIDTH, Engine.HEIGHT, RANDOM);
             }
         }
+
         WORLD = god.WORLD;
-        remainingFlowers = 3;
         gameState = 0;
+        remainingFlowers = 3;
         switch (level) {
             case 1       -> setObjects(3, 0, 0);
             case 2       -> setObjects(3, 1, 0);
@@ -70,19 +96,94 @@ public class Game {
         }
     }
 
+    /**
+     * Uses the current Random object to create a seed for constructing a new Random object.
+     */
     private void refreshRandom() {
         long newSeed = RANDOM.nextInt();
         RANDOM = new Random(newSeed);
     }
 
-    protected TETile[][] gameWorld() {
-        return switch (level) {
-            case 1, 2, 3, 4, 5, 6 -> WORLD;
-            case 7                -> worldWithinSight();
-            default               -> null;
-        };
+    /**
+     * Initializes game objects.
+     */
+    private void setObjects(int flowers, int teleport, int enemy) {
+        passableObjects = new HashMap<>();
+
+        // avatar
+        initializeObject("avatar", Tileset.AVATAR);
+        // door
+        initializeObject("door", Tileset.LOCKED_DOOR);
+        // flower
+        for (int i = 0; i < flowers; i++) {
+            initializeObject("flower", Tileset.FLOWER);
+        }
+        // teleport
+        if (teleport > 0) {
+            initializeObject("teleportEntry", Tileset.TELEPORT_ENTRY);
+            initializeObject("teleportExit", Tileset.TELEPORT_EXIT);
+        }
+        // enemy
+        if (enemy > 0) {
+            enemies = new LinkedList<>();
+            for (int i = 0; i < enemy; i++) {
+                initializeObject("enemy", Tileset.ENEMY);
+            }
+            enemyGraph = new EnemyGraph(WORLD, passableObjects);
+            enemyStopwatch = new Stopwatch();
+            enemyLastMove = enemyStopwatch.elapsedTime();
+        }
     }
 
+    /**
+     * Finds a random, unique position for each game object, and changes the tile at that
+     * position to corresponding tile. If object is not avatar or enemy, adds it to the container
+     * for passable objects. Adds enemy object to the list of enemies.
+     */
+    private void initializeObject(String object, TETile tile) {
+        Position pos = randomPosition();
+        changeTile(pos, tile);
+        switch (object) {
+            case "avatar" -> avatar = pos;
+            case "door" -> door = pos;
+            case "teleportExit" -> teleportExit = pos;
+        }
+        if (object.equals("enemy")) {
+            enemies.add(pos);
+        } else if (!object.equals("avatar")) {
+            passableObjects.put(pos, tile);
+        }
+    }
+
+    /**
+     * Returns a random position that is not already occupied by existing game objects.
+     */
+    private Position randomPosition() {
+        int x = RANDOM.nextInt(Engine.WIDTH - 8) + 4;
+        int y = RANDOM.nextInt(Engine.HEIGHT - 8) + 4;
+        if (WORLD[x][y] == Tileset.FLOOR) {
+            return new Position(x, y);
+        } else {
+            return randomPosition();
+        }
+    }
+
+    /**
+     * For the first 6 levels, player can see the entire world. But for the final 7th level,
+     * player's vision is limited. This is the primary method where Game instance communicates to
+     * Engine what world should be rendered.
+     */
+    protected TETile[][] gameWorld() {
+        if (level < 7) {
+            return WORLD;
+        } else {
+            return worldWithinSight();
+        }
+    }
+
+    /**
+     * Returns the world within 8 unit-distance from the avatar.
+     */
     private TETile[][] worldWithinSight() {
         int viewLimit = 8;
         int xLeft = avatar.getX() - viewLimit;
@@ -104,73 +205,7 @@ public class Game {
     }
 
     /**
-     * Initializes game objects each to a random position and draws them onto the world.
-     */
-    private void setObjects(int flowers, int teleport, int enemy) {
-        passableObjects = new HashMap<>();
-
-        // avatar
-        initializeObject("avatar", Tileset.AVATAR);
-
-        // door
-        initializeObject("door", Tileset.LOCKED_DOOR);
-
-        // flowers
-        for (int i = 0; i < flowers; i++) {
-            initializeObject("flower", Tileset.FLOWER);
-        }
-
-        // teleport
-        if (teleport > 0) {
-            initializeObject("teleportEntry", Tileset.TELEPORT_ENTRY);
-            initializeObject("teleportExit", Tileset.TELEPORT_EXIT);
-        }
-
-        // enemies
-        if (enemy > 0) {
-            enemies = new LinkedList<>();
-            for (int i = 0; i < enemy; i++) {
-                initializeObject("enemy", Tileset.ENEMY);
-            }
-            graph = new EnemyGraph(WORLD, passableObjects);
-            enemyStopwatch = new Stopwatch();
-            enemyLastMove = enemyStopwatch.elapsedTime();
-        }
-    }
-
-    /**
-     * FIXME doc
-     */
-    private void initializeObject(String object, TETile tile) {
-        Position pos = randomPosition();
-        changeTile(pos, tile);
-        switch (object) {
-            case "avatar" -> avatar = pos;
-            case "door" -> door = pos;
-            case "teleportExit" -> teleportExit = pos;
-        }
-        if (object.equals("enemy")) {
-            enemies.add(pos);
-        } else if (!object.equals("avatar")) {
-            passableObjects.put(pos, tile);
-        }
-    }
-
-    /**
-     * Returns a random floor position that is not already taken by existing game objects.
-     */
-    private Position randomPosition() {
-        int x = RANDOM.nextInt(Engine.WIDTH - 8) + 4;
-        int y = RANDOM.nextInt(Engine.HEIGHT - 8) + 4;
-        if (WORLD[x][y] == Tileset.FLOOR) {
-            return new Position(x, y);
-        } else {
-            return randomPosition();
-        }
-    }
-
-    /**
-     * Moves the avatar as directed by the input key.
+     * This is the primary method where Engine communicates to Game how it should move the avatar.
      */
     protected void play(char key) {
         switch (Character.toUpperCase(key)) {
@@ -182,18 +217,19 @@ public class Game {
     }
 
     /**
-     * If the intended position is WALL, does nothing. Otherwise:
-     *     - For the intended position:
-     *          - If it's occupied by a passable object, don't change it;
-     *          - Else if it's FLOOR, replaces it with AVATAR.
+     * Determines what actions should be executed. If the intended position is WALL, no action is
+     * made. Otherwise, moves the avatar according to the following rules:
      *     - For the current position:
      *          - If it's occupied by a passable object, through which AVATAR is currently
      *            passing, don't change it;
      *          - Else if it's plain AVATAR, replaces it with FLOOR.
-     *     - Then, there's some special operations to be executed for certain cases:
+     *     - For the intended position:
+     *          - If it's occupied by a passable object, don't change it;
+     *          - Else if it's FLOOR, replaces it with AVATAR.
+     *     - Then, there's special operations to be executed for certain cases:
      *          - If the intended position is UNLOCKED DOOR, sets game state to 1;
      *          - If the intended position if FLOWER, decrements the number of remaining wild
-     *            flowers by 1 and removes position from the list of passable objects;
+     *            flowers by 1 and removes that position from the list of passable objects;
      *          - If the intended position is TELEPORT ENTRY, sends avatar to teleport exit.
      */
     private void moveAvatar(Position nextPos) {
@@ -207,7 +243,6 @@ public class Game {
                     changeTile(door, Tileset.UNLOCKED_DOOR);
                 }
             }
-
             changeTile(avatar, passableObjects.getOrDefault(avatar, Tileset.FLOOR));
             changeTile(nextPos, passableObjects.getOrDefault(nextPos, Tileset.AVATAR));
             avatar = nextPos;
@@ -222,7 +257,7 @@ public class Game {
     }
 
     /**
-     * Returns true if the given tile isn't WALL or occupied by NPC.
+     * Returns true if the given tile is either FLOOR or passable objects.
      */
     private boolean isWalkable(TETile tile) {
         return tile == Tileset.FLOOR || passableObjects.containsValue(tile);
@@ -235,21 +270,26 @@ public class Game {
         WORLD[pos.getX()][pos.getY()] = tile;
     }
 
-    // FIXME doc
+    /**
+     * The primary method for NPCs' movement. The length of pause between each move is determined
+     * by the game level: the higher, the faster. Uses A* algorithm to calculate the shortest
+     * route for each enemy, and moves it to the next position. If the next position is avatar,
+     * that is, if an enemy catches avatar, the game is over.
+     */
     protected void enemyChase() {
         if (enemies == null) {
             return;
         }
         double interval = 0;
         switch (level) {
-            case 3    -> interval = 1.00;
+            case 3    -> interval = 1;
             case 4, 5 -> interval = 0.75;
-            case 6, 7 -> interval = 0.50;  // enemies move faster and faster
+            case 6, 7 -> interval = 0.5;
         }
         if (enemyStopwatch.elapsedTime() - enemyLastMove >= interval) {
             List<Position> enemiesMoved = new LinkedList<>();
             for (Position enemy : enemies) {
-                AStarSolver aStar = new AStarSolver(graph, enemy, avatar);
+                AStarSolver aStar = new AStarSolver(enemyGraph, enemy, avatar);
                 if (aStar.foundShortestPath()) {
                     Position nextPos = aStar.shortestPath().get(0);
                     changeTile(nextPos, passableObjects.getOrDefault(nextPos, Tileset.ENEMY));
