@@ -8,11 +8,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-public class WorldGraph {
+public class EnemyGraph {
     private final TETile[][] world;
     private final HashMap<Position, TETile> passableObjects;
 
-    public WorldGraph(TETile[][] world, HashMap<Position, TETile> passableObjects) {
+    public EnemyGraph(TETile[][] world, HashMap<Position, TETile> passableObjects) {
         this.world = world;
         this.passableObjects = passableObjects;
     }
@@ -28,8 +28,7 @@ public class WorldGraph {
 
     private void addNeighbor(List<Edge> neighbors, Position pos, Position neighbor) {
         TETile tile = world[neighbor.getX()][neighbor.getY()];
-        //|| passableObjects.containsKey(neighbor)
-        if (tile == Tileset.FLOOR ) {
+        if (tile == Tileset.FLOOR || tile == Tileset.AVATAR || passableObjects.containsValue(tile)) {
             neighbors.add(new Edge(pos, neighbor, 1));
         }
     }

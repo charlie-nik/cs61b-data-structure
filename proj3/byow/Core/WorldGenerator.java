@@ -4,6 +4,7 @@ import byow.BuildingBlock.*;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
+import edu.princeton.cs.introcs.Stopwatch;
 
 import java.util.Random;
 
@@ -15,13 +16,15 @@ import java.util.Random;
  * reaches LOAD_FACTOR.
  */
 public class WorldGenerator {
+    private static final double LOAD_FACTOR = 0.22;
+    private static final int TIMEOUT = 2;
+
     private final int WIDTH;
     private final int HEIGHT;
     private final Random RANDOM;
-
-    public final TETile[][] WORLD;
-    private final double LOAD_FACTOR = 0.22;
+    protected final TETile[][] WORLD;
     private int totalNumOfTiles;
+    private boolean isWorldGenerated;
 
     /**
      * Initializes a TETile[][] board. Fills every tile with NOTHING, and then replaces tiles
@@ -33,20 +36,8 @@ public class WorldGenerator {
         RANDOM = random;
         WORLD = new TETile[width][height];
         totalNumOfTiles = 0;
-
+        isWorldGenerated = false;
         fillBackground();
-        generateWorld();
-    }
-
-    /**
-     * Fills every tile of the world with NOTHING.
-     */
-    private void fillBackground() {
-        for (int i = 0; i < WORLD.length; i++) {
-            for (int j = 0; j < WORLD[0].length; j++) {
-                WORLD[i][j] = Tileset.NOTHING;
-            }
-        }
     }
 
     /**
@@ -56,10 +47,13 @@ public class WorldGenerator {
      *      B. try building a hallway out of it
      *          i.  if succeeds, there's a 50% chance of choosing to try building a hallway turn
      *          ii. if succeeds, try building a room at the end of the hallway
+     *          FIXME timeout doc
      */
-    private void generateWorld() {
+    protected void generateWorld() {
+        Stopwatch sw = new Stopwatch();
+
         buildRoom(null);
-        while (load() < LOAD_FACTOR) {
+        while (load() < LOAD_FACTOR && sw.elapsedTime() < TIMEOUT) {
             int randomIndex = RANDOM.nextInt(Area.ROOMS.size());
             Room room = Area.ROOMS.get(randomIndex);
             Hallway hallway = buildHallway(room);
@@ -68,6 +62,7 @@ public class WorldGenerator {
                 buildRoom(hallway);
             }
         }
+        isWorldGenerated = load() >= LOAD_FACTOR;
     }
 
     /**
@@ -137,10 +132,25 @@ public class WorldGenerator {
     }
 
     /**
+     * Fills every tile of the world with NOTHING.
+     */
+    private void fillBackground() {
+        for (int i = 0; i < WORLD.length; i++) {
+            for (int j = 0; j < WORLD[0].length; j++) {
+                WORLD[i][j] = Tileset.NOTHING;
+            }
+        }
+    }
+
+    /**
      * Returns the percentage of occupied tiles against the total number of tiles.
      */
     private double load() {
         return (float) totalNumOfTiles / (WIDTH * HEIGHT);
+    }
+
+    public boolean isWorldGenerated() {
+        return isWorldGenerated;
     }
 
     /**
@@ -150,7 +160,7 @@ public class WorldGenerator {
         TERenderer teRenderer = new TERenderer();
         teRenderer.initialize(80, 30);
 
-        long seed = 818;
+        long seed = 84;
         Random r = new Random(seed);
         WorldGenerator wg = new WorldGenerator(80, 30, r);
 

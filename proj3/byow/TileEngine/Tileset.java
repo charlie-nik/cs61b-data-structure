@@ -33,6 +33,11 @@ public class Tileset {
     public static final TETile SAND = new TETile('▒', Color.yellow, Color.black, "sand");
     public static final TETile MOUNTAIN = new TETile('▲', Color.gray, Color.black, "mountain");
     public static final TETile TREE = new TETile('♠', Color.green, Color.black, "tree");
+    public static final TETile TELEPORT_ENTRY = new TETile('◉', new Color(0, 160, 255),
+            Color.black, "teleport entry");
+    public static final TETile TELEPORT_EXIT = new TETile('◎', new Color(0, 160, 255),
+            Color.black, "teleport exit");
+    public static final TETile ENEMY = new TETile('❋', Color.red, Color.black, "enemy");
 }
 
 
