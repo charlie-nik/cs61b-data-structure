@@ -1,5 +1,6 @@
 package byow.BuildingBlock;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -8,7 +9,9 @@ import java.util.Objects;
  * the instance. If two positions have the same x-coordinate and y-coordinate, they are ruled as
  * equal.
  */
-public class Position {
+public class Position implements Serializable {
+    private static final long serialVersionUID = -6620607152817525846L;
+
     private final int x;
     private final int y;
     public Position(int x, int y) {
