@@ -10,7 +10,8 @@ import java.util.*;
  * valid Room instance is created, adds the source Hallway to its list of adjacent hallways and
  * initializes its number of hallway construction attempts as 0. Criteria of validity: first,
  * 3 <= length <= 8; second, no overlap with existing rooms and hallways. Stays one space away
- * from borders for walls, and then three more spaces for aesthetics.
+ * from borders for walls, and then for aesthetics, stays 3 spaces away from left and right
+ * borders and 4 spaces from upper and bottom borders.
  */
 public class Room implements Area {
     private final int WIDTH, HEIGHT;                      // width and height of WORLD
@@ -87,15 +88,15 @@ public class Room implements Area {
                 width = randomLengthWithin(maxWidth);
                 roomX = xEndpoint - width;
             }
-            roomY = Math.max(height + 3, Math.min(HEIGHT - 5, RANDOM.nextInt(height) + yEndpoint));
+            roomY = Math.max(height + 4, Math.min(HEIGHT - 6, RANDOM.nextInt(height) + yEndpoint));
         } else {
             if (hallway.direction() == Direction.NORTH) {
-                int maxHeight = HEIGHT - yEndpoint - 5;
+                int maxHeight = HEIGHT - yEndpoint - 6;
                 height = randomLengthWithin(maxHeight);
                 roomY = yEndpoint + height;
             } else {
                 roomY = yEndpoint - 1;
-                int maxHeight = roomY - 3;
+                int maxHeight = roomY - 4;
                 height = randomLengthWithin(maxHeight);
             }
             roomX = Math.max(4, Math.min(WIDTH - width - 4,
@@ -147,7 +148,7 @@ public class Room implements Area {
      * Randomly returns a valid y-coordinate that doesn't touch the borders of the world.
      */
     private int randomInBoundsY() {
-        return 3 + height + RANDOM.nextInt(HEIGHT - height - 7);
+        return 4 + height + RANDOM.nextInt(HEIGHT - height - 8);
     }
 
     /**

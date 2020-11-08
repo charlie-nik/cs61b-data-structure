@@ -13,7 +13,8 @@ import java.util.Random;
  * and adds itself to the source Room's list of adjacent hallways; if not, quits trying. Either way,
  * increments the source Room's number of hallway construction attempts by one. Criteria of
  * validity: first, 2 <= length <= 10; second, no overlap with existing rooms and hallways. Stays
- * one space away from world borders for walls, and then three more spaces for aesthetics.
+ * one space away from world borders for walls, and then for aesthetics, stays 3 spaces away from
+ * left and right borders and 4 spaces from upper and bottom borders.
  */
 public class Hallway implements Area {
     private final int WIDTH, HEIGHT;                    // width and height of WORLD
@@ -111,9 +112,9 @@ public class Hallway implements Area {
         } else if (dir == Direction.WEST) {
             maxLength = startPos.getX() - 3;
         } else if (dir == Direction.NORTH) {
-            maxLength = HEIGHT - startPos.getY() - 4;
+            maxLength = HEIGHT - startPos.getY() - 5;
         } else {
-            maxLength = startPos.getY() - 3;
+            maxLength = startPos.getY() - 4;
         }
 
         if (maxLength >= MIN_LENGTH) {
