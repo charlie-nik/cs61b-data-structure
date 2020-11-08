@@ -1,6 +1,6 @@
-package byow.Graph;
+package byow.graph;
 
-import byow.BuildingBlock.Position;
+import byow.architect.Position;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 
