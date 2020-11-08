@@ -1,6 +1,7 @@
 package byow.TileEngine;
 
 import java.awt.Color;
+import java.io.Serializable;
 
 /**
  * Contains constant tile objects, to avoid having to remake the same tiles in different parts of
@@ -22,6 +23,7 @@ public class Tileset {
             "wall");
     public static final TETile FLOOR = new TETile('·', new Color(128, 192, 128), Color.black,
             "floor");
+    public static final TETile ENEMY_PATH = new TETile(FLOOR, new Color(233, 53, 53));
     public static final TETile NOTHING = new TETile(' ', Color.black, Color.black, "nothing");
     public static final TETile GRASS = new TETile('"', Color.green, Color.black, "grass");
     public static final TETile WATER = new TETile('≈', Color.blue, Color.black, "water");
@@ -37,6 +39,10 @@ public class Tileset {
             Color.black, "teleport entry");
     public static final TETile TELEPORT_EXIT = new TETile('◎', new Color(0, 160, 255),
             Color.black, "teleport exit");
+    public static final TETile TELEPORT_ENTRY_DEACTIVATED = new TETile('◉',
+            new Color(170, 170, 170), Color.black, "teleport entry deactivated");
+    public static final TETile TELEPORT_EXIT_DEACTIVATED = new TETile('◎',
+            new Color(170, 170, 170), Color.black, "teleport exit deactivated");
     public static final TETile ENEMY = new TETile('❋', Color.red, Color.black, "enemy");
 }
 
