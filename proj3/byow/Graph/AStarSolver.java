@@ -4,9 +4,11 @@ import byow.BuildingBlock.Position;
 
 import java.util.*;
 
-// FIXME: doc: redid a star solver from hw4 as an exercise
+/**
+ * Class for A* algorithm.
+ */
 public class AStarSolver {
-    private final WorldGraph graph;
+    private final EnemyGraph graph;
     private final Position s, t;
 
     private final HashSet<Position> marked;
@@ -15,7 +17,7 @@ public class AStarSolver {
     private final PriorityQueue<Position> pq;
     private boolean foundShortestPath = false;
 
-    public AStarSolver(WorldGraph graph, Position start, Position target) {
+    public AStarSolver(EnemyGraph graph, Position start, Position target) {
         this.graph = graph;
         this.s = start;
         this.t = target;
@@ -23,7 +25,7 @@ public class AStarSolver {
         marked = new HashSet<>();
         distTo = new HashMap<>();
         edgeTo = new HashMap<>();
-        pq = new PriorityQueue<>(11, new PriorityComparator()); // FIXME: initial size???
+        pq = new PriorityQueue<>(11, new PriorityComparator());
 
         aStar();
     }
