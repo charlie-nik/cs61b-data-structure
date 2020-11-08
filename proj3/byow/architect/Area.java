@@ -1,4 +1,4 @@
-package byow.BuildingBlock;
+package byow.architect;
 
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
@@ -91,7 +91,7 @@ public interface Area {
             for (int y = 0; y < height(); y++) {
                 int currX = position().getX() + x;
                 int currY = position().getY() - y;
-                world[currX][currY] = Tileset.FLOOR;;
+                world[currX][currY] = Tileset.FLOOR;
             }
         }
     }

@@ -1,6 +1,6 @@
-package byow.BuildingBlock;
+package byow.architect;
 
-import byow.BuildingBlock.Space.*;
+import byow.architect.Space.*;
 import byow.TileEngine.TETile;
 
 import java.util.LinkedList;

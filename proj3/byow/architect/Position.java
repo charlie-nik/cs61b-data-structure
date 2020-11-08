@@ -1,4 +1,4 @@
-package byow.BuildingBlock;
+package byow.architect;
 
 import java.io.Serializable;
 import java.util.Objects;

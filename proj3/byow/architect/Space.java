@@ -1,4 +1,4 @@
-package byow.BuildingBlock;
+package byow.architect;
 
 public class Space {
     public enum Direction {
