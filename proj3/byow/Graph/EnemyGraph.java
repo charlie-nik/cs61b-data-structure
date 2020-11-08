@@ -4,11 +4,17 @@ import byow.BuildingBlock.Position;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-public class EnemyGraph {
+/**
+ * The underlying graph for calculating NPC's shortest path.
+ */
+public class EnemyGraph implements Serializable {
+    private static final long serialVersionUID = 3210637523830103115L;
+
     private final TETile[][] world;
     private final HashMap<Position, TETile> passableObjects;
 
@@ -28,7 +34,7 @@ public class EnemyGraph {
 
     private void addNeighbor(List<Edge> neighbors, Position pos, Position neighbor) {
         TETile tile = world[neighbor.getX()][neighbor.getY()];
-        if (tile == Tileset.FLOOR || tile == Tileset.AVATAR || passableObjects.containsValue(tile)) {
+        if (tile.equals(Tileset.FLOOR) || tile.equals(Tileset.AVATAR) || passableObjects.containsValue(tile)) {
             neighbors.add(new Edge(pos, neighbor, 1));
         }
     }
