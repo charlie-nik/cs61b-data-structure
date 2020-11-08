@@ -1,4 +1,4 @@
-package byow.Input;
+package byow.input;
 
 public class StringInputSource implements InputSource {
     private final String input;

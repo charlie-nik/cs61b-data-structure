@@ -1,4 +1,4 @@
-package byow.Input;
+package byow.input;
 
 import edu.princeton.cs.introcs.StdDraw;
 

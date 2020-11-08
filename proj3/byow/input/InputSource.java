@@ -1,4 +1,4 @@
-package byow.Input;
+package byow.input;
 
 public interface InputSource {
     boolean possibleNextKey();
