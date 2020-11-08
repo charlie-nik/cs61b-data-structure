@@ -33,9 +33,9 @@ public class UI {
 
         Font option = new Font("Monoco", Font.PLAIN, 20);
         StdDraw.setFont(option);
-        StdDraw.text((float) Engine.MENU_WIDTH / 2, 13, "New Game (N)");
-        StdDraw.text((float) Engine.MENU_WIDTH / 2, 11, "Load Game (L)");
-        StdDraw.text((float) Engine.MENU_WIDTH / 2, 9, "Quit (Q)");
+        StdDraw.text((float) Engine.MENU_WIDTH / 2, 12, "New Game (N)");
+        StdDraw.text((float) Engine.MENU_WIDTH / 2, 10, "Load Game (L)");
+        StdDraw.text((float) Engine.MENU_WIDTH / 2, 8, "Quit (Q)");
 
         StdDraw.show();
     }
@@ -68,13 +68,12 @@ public class UI {
             return;
         }
         StdDraw.clear(Color.BLACK);
-        Font prompt = new Font("Monoco", Font.PLAIN, 20);
-        StdDraw.setFont(prompt);
         StdDraw.setPenColor(Color.WHITE);
+        StdDraw.setFont(new Font("Monoco", Font.PLAIN, 20));
         StdDraw.text((float) Engine.MENU_WIDTH / 2, (float) Engine.MENU_HEIGHT / 3 + 1.5,
-                "Enter a seed and press 'S'");
-        StdDraw.text((float) Engine.MENU_WIDTH / 2, (float) Engine.MENU_HEIGHT / 3 - 1,
-                "[" + seed + "]");
+                "Enter a seed and press (S)");
+        StdDraw.setFont(new Font("Monoco", Font.PLAIN, 18));
+        StdDraw.text((float) Engine.MENU_WIDTH / 2, (float) Engine.MENU_HEIGHT / 3 - 1.5, seed);
         StdDraw.show();
     }
 
@@ -97,7 +96,7 @@ public class UI {
         StdDraw.pause(4500);
     }
 
-    protected static void levelWindow(int level, boolean keyboard) {
+    protected static void levelTitleWindow(int level, boolean keyboard) {
         if (!keyboard) {
             return;
         }
@@ -117,24 +116,24 @@ public class UI {
             case 7 -> levelMessage = "Ultimatum! Beware of the shrinking vision. "
                                    + "Darkness before dawn";
         }
-        levelWindowHelper(level, "");
-        levelWindowHelper(level, levelMessage + "");
-        levelWindowHelper(level, levelMessage + " .");
-        levelWindowHelper(level, levelMessage + " . .");
-        levelWindowHelper(level, levelMessage + " . . .");
-        levelWindowHelper(level, levelMessage + " .");
-        levelWindowHelper(level, levelMessage + " . .");
-        levelWindowHelper(level, levelMessage + " . . .");
+        levelTitleHelper(level, "");
+        levelTitleHelper(level, levelMessage + "");
+        levelTitleHelper(level, levelMessage + " .");
+        levelTitleHelper(level, levelMessage + " . .");
+        levelTitleHelper(level, levelMessage + " . . .");
+        levelTitleHelper(level, levelMessage + " .");
+        levelTitleHelper(level, levelMessage + " . .");
+        levelTitleHelper(level, levelMessage + " . . .");
     }
 
-    private static void levelWindowHelper(int level, String levelMessage) {
+    private static void levelTitleHelper(int level, String levelMessage) {
         StdDraw.clear(Color.BLACK);
         StdDraw.setPenColor(Color.WHITE);
         StdDraw.setFont(new Font("Monoco", Font.BOLD, 32));
         StdDraw.textLeft((float) Engine.WIDTH / 4, (float) Engine.HEIGHT / 2 + 1,
                 "Level " + level);
         StdDraw.setFont(new Font("Monoco", Font.PLAIN, 18));
-        StdDraw.textLeft((float) Engine.WIDTH / 4, (float) Engine.HEIGHT / 2 - 1.5,
+        StdDraw.textLeft((float) Engine.WIDTH / 4, (float) Engine.HEIGHT / 2 - 1.6,
                 levelMessage);
         StdDraw.show();
         if (levelMessage.isEmpty()) {
@@ -151,33 +150,73 @@ public class UI {
             return;
         }
         if (level == 7 && result == 1) {
-            levelResultHelper("You've brought the world back to life.");
+            levelResultHelper("You've brought the world back to life.", 30, "", 0);
             StdDraw.pause(800);
             System.exit(0);
         } else if (result == 1) {
-            levelResultHelper("You've passed!");
+            levelResultHelper("You've passed!", 30, "", 0);
         } else {
-            levelResultHelper("Ugh! There's no more you.");
+            levelResultHelper("!", 80, "", 0);
+            StdDraw.pause(300);
+            levelResultHelper("!", 80, "There's no more you . . .", 20);
             StdDraw.pause(800);
             System.exit(0);
         }
     }
 
-    private static void levelResultHelper(String firstLine) {
+    private static void levelResultHelper(String line1, int size1, String line2, int size2) {
         StdDraw.clear(Color.BLACK);
-        Font font = new Font("Monoco", Font.BOLD, 30);
-        StdDraw.setFont(font);
         StdDraw.setPenColor(Color.WHITE);
-        StdDraw.text((float) Engine.WIDTH / 2, (float) Engine.HEIGHT / 2, firstLine);
+        StdDraw.setFont(new Font("Monoco", Font.BOLD, size1));
+        StdDraw.text((float) Engine.WIDTH / 2, (float) Engine.HEIGHT / 2, line1);
+        StdDraw.setFont(new Font("Monoco", Font.BOLD, size2));
+        StdDraw.text((float) Engine.WIDTH / 2, (float) Engine.HEIGHT / 2 - 4.5, line2);
         StdDraw.show();
         StdDraw.pause(1800);
+    }
+
+    /**
+     * Opens a window displaying control keys and their corresponding actions.
+     */
+    protected static void controlWindow(int level, boolean keyboard) {
+        if (!keyboard) {
+            return;
+        }
+        StdDraw.clear(Color.BLACK);
+        StdDraw.setPenColor(Color.WHITE);
+
+        StdDraw.setFont(new Font("Monoco", Font.BOLD, 27));
+        StdDraw.text((float) Engine.WIDTH / 2, 23.5, "(W)");
+        StdDraw.text((float) Engine.WIDTH / 2, 20, "(A)        (D)");
+        StdDraw.text((float) Engine.WIDTH / 2, 16.5, "(S)");
+
+        StdDraw.setFont(new Font("Monoco", Font.PLAIN, 16));
+        StdDraw.text((float) Engine.WIDTH / 2, 7, "Continue (C)");
+        StdDraw.text((float) Engine.WIDTH / 2, 5.2, "Back to Menu (M)");
+        StdDraw.text((float) Engine.WIDTH / 2, 3.4, "Save and Quit (:Q)        Quit (Q)");
+        if (level >= 2) {
+            StdDraw.text((float) Engine.WIDTH / 2, 12, "De-activate      Re-activate Teleport (T)");
+        }
+        if (level >= 3) {
+            StdDraw.text((float) Engine.WIDTH / 2, 10.2, "Show      Hide NPC's Path (P)");
+        }
+        StdDraw.setFont(new Font("Monoco", Font.BOLD, 19));
+        StdDraw.text((float) Engine.WIDTH / 2 + 2.5, 3.4, ".");
+        if (level >= 2) {
+            StdDraw.text((float) Engine.WIDTH / 2 - 2.88, 12, "/");
+        }
+        if (level >= 3) {
+            StdDraw.text((float) Engine.WIDTH / 2 - 3.2, 10.2, "/");
+        }
+
+        StdDraw.show();
     }
 
     /**
      * Displays a Head Up Display that includes a description of the moused-over tile and a
      * count of the number of wild flowers yet to be plucked.
      */
-    protected static void headUpDisplay(TETile[][] world, int flowers, boolean keyboard) {
+    protected static void headUpDisplay(Game game, boolean keyboard) {
         if (!keyboard) {
             return;
         }
@@ -186,40 +225,52 @@ public class UI {
         if (x < 0 || x >= Engine.WIDTH || y < 0 || y >= Engine.HEIGHT) {
             return;
         }
-        TETile tile = world[x][y];
+        TETile tile = game.surfaceWorld[x][y];
 
-        if (tile == Tileset.NOTHING) {
-            writeHUD(flowers, "nothing - unknown, unlimited, free");
-        } else if (tile == Tileset.FLOOR) {
-            writeHUD(flowers, "floor - harmless, taciturn, reliable");
-        } else if (tile == Tileset.AVATAR) {
-            writeHUD(flowers, "you - homeless, nameless, clueless");
-        } else if (tile == Tileset.FLOWER) {
-            writeHUD(flowers, "flower - pick, pluck, collect");
-        } else if (tile == Tileset.LOCKED_DOOR) {
-            writeHUD(flowers, "locked door - desirable, inviting, unreachable");
-        } else if (tile == Tileset.UNLOCKED_DOOR) {
-            writeHUD(flowers, "unlocked door - tamed, available, penetrable");
-        } else if (tile == Tileset.TELEPORT_ENTRY) {
-            writeHUD(flowers, "teleport entry - futuristic, impossible, dumbfounding");
-        } else if (tile == Tileset.TELEPORT_EXIT) {
-            writeHUD(flowers, "teleport exit - reborn, dazed, transformed");
-        } else if (tile == Tileset.ENEMY) {
-            writeHUD(flowers, "hostile NPC - ill-willed, ravenous, mechanical");
-        } else {
-            writeHUD(flowers, "wall - cold, cruel, firm");
+        if (tile.equals(Tileset.NOTHING)) {
+            writeHUD(game, "nothing - unknown, unlimited, free");
+        } else if (tile.equals(Tileset.WALL)) {
+            writeHUD(game, "wall - cold, cruel, firm");
+        } else if (tile.equals(Tileset.FLOOR)) {
+            writeHUD(game, "floor - harmless, taciturn, reliable");
+        } else if (tile.equals(Tileset.AVATAR)) {
+            writeHUD(game, "you - homeless, nameless, clueless");
+        } else if (tile.equals(Tileset.FLOWER)) {
+            writeHUD(game, "flower - pick, pluck, collect");
+        } else if (tile.equals(Tileset.LOCKED_DOOR)) {
+            writeHUD(game, "locked door - desirable, inviting, unreachable");
+        } else if (tile.equals(Tileset.UNLOCKED_DOOR)) {
+            writeHUD(game, "unlocked door - tamed, available, penetrable");
+        } else if (tile.equals(Tileset.TELEPORT_ENTRY)) {
+            writeHUD(game, "teleport entry - futuristic, impossible, dumbfounding");
+        } else if (tile.equals(Tileset.TELEPORT_EXIT)) {
+            writeHUD(game, "teleport exit - reborn, dazed, transformed");
+        } else if (tile.equals(Tileset.ENEMY)) {
+            writeHUD(game, "hostile NPC - ill-willed, ravenous, mechanical");
         }
     }
 
     /**
-     * Displays tile description on the upper left corner and the number of remaining wild
-     * flowers in the lower left corner.
+     * Displays tile description on the upper left corner. Displays the current level and the number
+     * of remaining wild flowers in the lower left corner. Displays a general description in the
+     * upper middle.
      */
-    private static void writeHUD(int flowers, String s) {
+    private static void writeHUD(Game game, String description) {
         StdDraw.setPenColor(Color.WHITE);
-        StdDraw.setFont(new Font("Monoco", Font.PLAIN, 15));
-        StdDraw.textLeft(1, 28.5, s);
-        StdDraw.textLeft(1, 1.5, "wild flowers: " + flowers + " / 3");
+        StdDraw.setFont(new Font("Monoco", Font.BOLD, 16));
+        StdDraw.textLeft(1.5, 1.5, "LEVEL " + game.level);
+        StdDraw.setFont(new Font("Monoco", Font.PLAIN, 16));
+        StdDraw.textLeft(6.7, 1.5, "wild flowers: " + game.remainingFlowers + " " + "/ 3");
+        StdDraw.textLeft(1.5, 28.5, description);
+        StdDraw.textRight(Engine.WIDTH - 2, 28.5, "Controls (C)");
+        switch (game.level) {
+            case 1 -> StdDraw.text((float) Engine.WIDTH / 2, 28.5,
+                    "Mouse over to read object's description.");
+            case 2 -> StdDraw.text((float) Engine.WIDTH / 2, 28.5,
+                    "Press (T) to de-activate teleport. Press again to re-activate.");
+            case 3 -> StdDraw.text((float) Engine.WIDTH / 2, 28.5,
+                    "Press (P) to show NPC's projected path. Press again to hide.");
+        }
         StdDraw.show();
     }
 
@@ -229,7 +280,7 @@ public class UI {
     public static void main(String[] args) {
         TERenderer ter = new TERenderer();
         ter.initialize(80, 30);
-        levelResultWindow(3, -1, true);
+        controlWindow(3, true);
     }
 
 }
