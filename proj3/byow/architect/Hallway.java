@@ -8,27 +8,33 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * This class creates a Hallway that starts from a random point in a room and goes in a random
- * direction for a random length. If a valid Hallway instance is created, draws it to the world
- * and adds itself to the source Room's list of adjacent hallways; if not, quits trying. Either way,
- * increments the source Room's number of hallway construction attempts by one. Criteria of
- * validity: first, 2 <= length <= 10; second, no overlap with existing rooms and hallways. Stays
- * one space away from world borders for walls, and then for aesthetics, stays 3 spaces away from
- * left and right borders and 4 spaces from upper and bottom borders.
+ * This class creates a Hallway that starts from a random point in a room {@link Room} and goes in a
+ * random direction for a random length.
+ *
+ * If a valid Hallway instance is created, draws it to the world and adds itself to the source
+ * room object's list of adjacent hallways; if not, quits trying. Either way, increments the source
+ * room object's number of hallway construction attempts by one. Criteria of validity:
+ *       - 2 <= length <= 10
+ *       - no overlap with existing rooms and hallways
+ *
+ * Stays one space away from world borders for walls, and then for aesthetics, stays 3 spaces
+ * away from left and right borders and 4 spaces from upper and bottom borders.
  */
 public class Hallway implements Area {
-    private final int WIDTH, HEIGHT;                    // width and height of WORLD
-    private final Room room;                            // the room where hallway comes from
-    private final Position startPosition, endPosition;  // hallway instance's start and end position
-    private final Direction direction;                  // hallway instance's direction
-    private final int length;                           // hallway instance's length
-    private boolean isTurn = false;                     // whether hallway is a L-turn or not
+    
     private static final int MIN_LENGTH = 3;            // hallway class's size minimum limit
     private static final int MAX_LENGTH = 10;           // hallway class's size maximum limit
 
-    private final Random RANDOM;
-    private final int attempt;
+    private final int WIDTH, HEIGHT;                    // width and height of the world
+    private final Random RANDOM;                        // random object used for all construction
+    private final Room room;                            // room object where this hallway comes from
+    private final Position startPosition, endPosition;  // this hallway's start and end position
+    private final Direction direction;                  // this hallway's direction
+    private final int length;                           // this hallway's length
+    private final int attempt;                          // which attempt this current attempt is
+
     private boolean hallwayCreated = false;
+
 
     /**
      * Primary public constructor, accessible to world-generating engine. Whenever the
@@ -36,6 +42,10 @@ public class Hallway implements Area {
      * by one whether the construction is successful or not. But if a valid Hallway instance is
      * created, adds itself to source Room's list of hallways, and removes its start position off
      * the Room's list of available points for hallway's starting position.
+     *
+     * @param world  the world onto which this hallway object will be added
+     * @param origin  the room object from which this hallway will originate
+     * @param random  the random object used for all construction
      */
     public Hallway(TETile[][] world, Room origin, Random random) {
         this(world, origin, null, null, -1, random);
@@ -63,7 +73,7 @@ public class Hallway implements Area {
         RANDOM = r;
 
         room = origin;
-        attempt = origin != null ? room.hallwayAttempt : 0;     // hallway turn = 0 attempt
+        attempt = origin != null ? room.hallwayAttempt : 0;
         direction = dir == null ? randomDirection() : dir;
         startPosition = pos == null ? randomStartPos(direction) : pos;
         length = len < 0 ? randomLength(direction, startPosition) : len;
@@ -160,6 +170,10 @@ public class Hallway implements Area {
     /**
      * Randomly constructs and returns a new hallway at the end of a given hallway so as to
      * create a L-shaped turn.
+     *
+     * @param world  the world onto which this hallway turn will be added
+     * @param hallway  the hallway object at the end of which this turn will be concatenated
+     * @return  a hallway object, which turns at the end of another hallway
      */
     public static Hallway hallwayTurn(TETile[][] world, Hallway hallway) {
         Direction dir = randomTurnDirection(hallway);
@@ -170,7 +184,6 @@ public class Hallway implements Area {
 
         if (turn.isValid(List.of(hallway))) {
             turn.hallwayCreated = true;
-            turn.isTurn = true;
             AREAS.add(turn);
             turn.drawToWorld(world);
         }
@@ -238,10 +251,6 @@ public class Hallway implements Area {
     @Override
     public int height() {
         return direction == Direction.NORTH || direction == Direction.SOUTH ? length : 1;
-    }
-
-    public boolean isTurn() {
-        return isTurn;
     }
 
     @Override

@@ -6,34 +6,45 @@ import byow.TileEngine.TETile;
 import java.util.*;
 
 /**
- * This class creates a Room of random size and random position at the end of a hallway. If a
- * valid Room instance is created, adds the source Hallway to its list of adjacent hallways and
- * initializes its number of hallway construction attempts as 0. Criteria of validity: first,
- * 3 <= length <= 8; second, no overlap with existing rooms and hallways. Stays one space away
- * from borders for walls, and then for aesthetics, stays 3 spaces away from left and right
- * borders and 4 spaces from upper and bottom borders.
+ * This class creates a Room of random size and random position at the end of a hallway
+ * {@link Hallway}.
+ *
+ * If a valid Room instance is created, adds the source hallway object to its list of adjacent
+ * hallways and initializes its number of hallway construction attempts as 0. Criteria of validity:
+ *      - 3 <= length <= 8
+ *      - no overlap with existing rooms and hallways.
+ *
+ * Stays one space away from borders for walls, and then for aesthetics, stays 3 spaces away from
+ * left and right borders and 4 spaces from upper and bottom borders.
  */
 public class Room implements Area {
-    private final int WIDTH, HEIGHT;                      // width and height of WORLD
-    private int width, height;                            // room instance's width and height
-    private Position position;                            // room instance's upper-left position
-    private Map<Direction, List<Position>> borders;       // possible positions to start a hallway
-    private List<Hallway> hallways;                       // all hallways from this room instance
-    public int hallwayAttempt;                            // number of attempts to build hallway
-    private static final int MAX_LENGTH = 8;              // room class's size maximum limit
-    private static final int MIN_LENGTH = 3;              // room class's size minimum limit
 
-    private final Random RANDOM;
+    private static final int MAX_LENGTH = 8;            // room class's size maximum limit
+    private static final int MIN_LENGTH = 3;            // room class's size minimum limit
+
+    private final int WIDTH, HEIGHT;                    // width and height of the world
+    private final Random RANDOM;                        // random object used for all construction
+    private int width, height;                          // this room's width and height
+    private Position position;                          // this room's upper-left corner position
+    private Map<Direction, List<Position>> borders;     // all possible positions to start a hallway
+    private List<Hallway> hallways;                     // all hallways adjacent to this room
+    protected int hallwayAttempt;                       // number of attempts to build hallway
+
     private boolean roomCreated = false;
 
+
     /**
-     * Room constructor. If a valid Room instance is created, adds the source hallway to its list
-     * of adjacent hallways and initializes its number of hallway construction attempts.
+     * Room constructor. If a valid Room instance is created, adds the source hallway object to its
+     * list of adjacent hallways and initializes its number of hallway construction attempts.
+     *
+     * @param world  the world onto which a valid room object will be added
+     * @param hallway  the hallway object at the end of which this room is to be constructed
+     * @param random  the random object used for all construction
      */
     public Room(TETile[][] world, Hallway hallway, Random random) {
         WIDTH = world.length;
         HEIGHT = world[0].length;
-        RANDOM = random;
+        this.RANDOM = random;
 
         createRandomRoom(hallway);
 
@@ -132,7 +143,7 @@ public class Room implements Area {
         }
 
         borders.put(Direction.NORTH, north);
-        borders.put(Direction.SOUTH,south);
+        borders.put(Direction.SOUTH, south);
         borders.put(Direction.EAST, east);
         borders.put(Direction.WEST, west);
     }
