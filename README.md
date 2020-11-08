@@ -1,7 +1,7 @@
 ### CS61B: Data Structure
 
 
-The repository is temporarily made public for recruitment purpose. Projects that may be of interest include:
+This repository is temporarily made public for recruitment purpose. Projects that may be of interest include:
 
 - BYOW Build Your Own World https://github.com/charlie-nik/sp19-cs61b/tree/master/proj3
     
