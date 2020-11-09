@@ -1,18 +1,21 @@
 package byow.Core;
 
-import byow.BuildingBlock.*;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
+import byow.architect.Area;
+import byow.architect.Hallway;
+import byow.architect.Room;
 import edu.princeton.cs.introcs.Stopwatch;
 
 import java.util.Random;
 
 /**
- * Primary class for random world generation. The algorithm is as follows. First, builds a
- * starter room. Second, builds a hallway coming out of starter-room, then another room at the end
- * of the first hallway. Third, randomly selects an existing room, builds a hallway out of it,
- * and a room at the end of the hallway. Repeats step 3 until the total number of occupied tiles
+ * Primary class for random world generation. The algorithm is as follows.
+ * First, builds a starter room. Second, builds a hallway coming out of
+ * starter-room, then another room at the end of the first hallway. Third 
+ * randomly selects an existing room, builds a hallway out of it, and a room at
+ * the end of the hallway. Repeats step 3 until the total number of occupied tiles
  * reaches LOAD_FACTOR.
  */
 public class WorldGenerator {
@@ -42,12 +45,12 @@ public class WorldGenerator {
 
     /**
      * The primary method for world generation. First, builds a starter room. Second, repeats
-     * the following steps until the number of occupied tiles reaches LOAD_FACTOR:
+     * the following steps until the number of occupied tiles reaches LOAD_FACTOR or this
+     * operation reaches time limit:
      *      A. randomly choose an existing room
      *      B. try building a hallway out of it
      *          i.  if succeeds, there's a 50% chance of choosing to try building a hallway turn
      *          ii. if succeeds, try building a room at the end of the hallway
-     *          FIXME timeout doc
      */
     protected void generateWorld() {
         Stopwatch sw = new Stopwatch();
@@ -149,7 +152,7 @@ public class WorldGenerator {
         return (float) totalNumOfTiles / (WIDTH * HEIGHT);
     }
 
-    public boolean isWorldGenerated() {
+    protected boolean isWorldGenerated() {
         return isWorldGenerated;
     }
 
