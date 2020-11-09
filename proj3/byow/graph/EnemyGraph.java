@@ -34,7 +34,10 @@ public class EnemyGraph implements Serializable {
 
     private void addNeighbor(List<Edge> neighbors, Position pos, Position neighbor) {
         TETile tile = world[neighbor.getX()][neighbor.getY()];
-        if (tile.equals(Tileset.FLOOR) || tile.equals(Tileset.AVATAR) || passableObjects.containsValue(tile)) {
+        if (tile.equals(Tileset.FLOOR)
+                || tile.equals(Tileset.AVATAR)
+                || tile.equals(Tileset.ENEMY)
+                || passableObjects.containsValue(tile)) {
             neighbors.add(new Edge(pos, neighbor, 1));
         }
     }
