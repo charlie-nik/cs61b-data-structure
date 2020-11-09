@@ -43,7 +43,7 @@ public class Tileset {
             new Color(170, 170, 170), Color.black, "teleport entry deactivated");
     public static final TETile TELEPORT_EXIT_DEACTIVATED = new TETile('◎',
             new Color(170, 170, 170), Color.black, "teleport exit deactivated");
-    public static final TETile ENEMY = new TETile('❋', Color.red, Color.black, "enemy");
+    public static final TETile ENEMY = new TETile('❋', Color.red, Color.black, "hostile NPC");
 }
 
 
