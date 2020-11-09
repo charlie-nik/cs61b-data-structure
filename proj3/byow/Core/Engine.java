@@ -1,8 +1,10 @@
 package byow.Core;
 
-import byow.Input.*;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
+import byow.input.InputSource;
+import byow.input.KeyboardInputSource;
+import byow.input.StringInputSource;
 import edu.princeton.cs.introcs.StdDraw;
 
 import java.io.*;
@@ -11,9 +13,7 @@ import java.math.BigInteger;
 /**
  * The primary class for user interaction. Accepting input from either keyboard or string entry,
  * this class processes the input key and, at its prompt, starts a new game, loads a previous
- * game, quits and saves the current game, or quits.
- *
- * FIXME: game saving/loading is fucked after adding multiple levels
+ * game, plays game, quits and saves the current game, or quits.
  */
 public class Engine {
     private final TERenderer ter = new TERenderer();
@@ -22,22 +22,21 @@ public class Engine {
     public static final int MENU_WIDTH = 30;
     public static final int MENU_HEIGHT = 30;
     private Game game;
-    private StringBuilder gameHistory;
-    private boolean keyboard;
+    private boolean keyboard = true;
+    private boolean almostQuitSave = false;
 
     /**
      * Method used for exploring a fresh world with keyboard input. One can also interact with
-     * string for the purpose of testing.
+     * string for testing purposes.
      */
     public void interactWithKeyboard() {
-        keyboard = true;
         InputSource inputSource = new KeyboardInputSource();
         selectMainMenu(inputSource);
     }
 
     /**
-     * According to the input key, performs one of the following options (if input key does not
-     * correspond to any of the options, ignores it and inspects the next):
+     * According to the input key, performs one of the following actions (if input key does not
+     * correspond to any of the options, ignores it and inspects the next key):
      *    - 'N': start a new game
      *    - 'L': load a previous game
      *    - 'Q': quit
@@ -55,64 +54,115 @@ public class Engine {
             case 'N' -> {
                 long seed = processSeed(inputSource);
                 startNewGame(seed);
-                playGame(inputSource, true);
+                playGame(inputSource);
             }
             case 'L' -> {
                 loadGame(inputSource);
-                playGame(inputSource, true);
+                playGame(inputSource);
             }
             case 'Q' -> quitGame();
         }
     }
 
     /**
-     * Generates a new Game instance using the input seed and displays the world onscreen.
+     * Processes input keys to retrieve the seed. Makes sure seed value doesn't exceed Java's
+     * maximum integer value (32-bit). For aesthetic reasons, forbids further entry if it already
+     * has 35 integers (numbers flow out of display window).
      */
-    private void startNewGame(long seed) {
-        game = new Game(seed);
-        gameHistory = new StringBuilder();
-        gameHistory.append(seed).append('S');
-
-        ter.initialize(WIDTH, HEIGHT);
+    private long processSeed(InputSource inputSource) {
+        UI.enterSeedWindow("", keyboard);
+        StringBuilder sb = new StringBuilder();
+        while (inputSource.possibleNextKey()) {
+            char key = cleanedNextKey(inputSource);
+            if (Character.isDigit(key) && sb.length() < 36) {
+                sb.append(key);
+                UI.enterSeedWindow(sb.toString(), keyboard);
+            } else if (key == 'S' && sb.length() > 0) {
+                break;
+            }
+        }
+        BigInteger input = new BigInteger(sb.toString());
+        if (input.compareTo(new BigInteger("2147483647")) > 0) {
+            return input.divideAndRemainder(new BigInteger("2147483647"))[1].intValue();
+        } else {
+            return input.intValue();
+        }
     }
 
     /**
-     * Repeats playing game and updating game state with TERender as the avatar moves around -
-     * until the next input key asks to quit or quit-save. This is not being monitored here but
-     * in cleanedNextKey() method.
+     * Generates a new Game instance using the input seed and initializes a new game history.
      */
-    private void playGame(InputSource inputSource, boolean gameOn) {
+    private void startNewGame(long seed) {
+        ter.initialize(WIDTH, HEIGHT);
+        game = new Game(seed);
+        newLevel();
+    }
+
+    /**
+     * Generates a new world for each new level and displays a level intro window.
+     */
+    private void newLevel() {
+        game.level += 1;
+        UI.levelTitleWindow(game.level, keyboard);
+        game.buildNewWorld();
+        ter.renderFrame(game.renderWorld(), game.level, game.remainingFlowers);
+    }
+
+    /**
+     * Repeats playing game and updating game state with TERender as the avatar moves around,
+     * until the next input key asks to quit or quit-save (this is not being monitored here but
+     * in cleanedNextKey() method), or until player wins or loses the game. Opens a control window
+     * when player enters 'C'.
+     */
+    private void playGame(InputSource inputSource) {
         while (true) {
-            newLevel();
             while (inputSource.possibleNextKey()) {
-                UI.headUpDisplay(game.gameWorld(), game.remainingFlowers, keyboard);
                 if (StdDraw.hasNextKeyTyped()) {
                     char key = cleanedNextKey(inputSource);
-                    game.play(key);
-                    gameHistory.append(key);
+                    switch (key) {
+                        case 'W', 'S', 'A', 'D' -> game.play(key);
+                        case 'T' -> game.teleportSwitch();
+                        case 'P' -> game.enemyPathSwitch();
+                        case 'C' -> showControlWindow(inputSource);
+                    }
                 }
                 game.enemyChase();
-                ter.renderFrame(game.gameWorld());
+                ter.renderFrame(game.renderWorld(), game.level, game.remainingFlowers);
 
                 if (game.gameState != 0) {
-                    StdDraw.pause(500);
+                    StdDraw.pause(200);
                     UI.levelResultWindow(game.level, game.gameState, keyboard);
                     break;
                 }
             }
+            if (game.level < 7) {
+                newLevel();
+            } else {
+                break;
+            }
         }
-    }
-
-    // FIXME doc
-    private void newLevel() {
-        game.level += 1;
-        UI.levelWindow(game.level, keyboard);
-        game.buildNewWorld();
-        ter.renderFrame(game.gameWorld());
+        StdDraw.pause(1000);
+        System.exit(0);
     }
 
     /**
-     * Saves the String value of gameHistory to file.
+     * Opens a window displaying control options and instructions. 'C' stands for 'continue,' 'M'
+     * stands for 'main menu,' and player can also quit or quit-save.
+     */
+    private void showControlWindow(InputSource inputSource) {
+        UI.controlWindow(game.level, keyboard);
+        while (true) {
+            char key = cleanedNextKey(inputSource);
+            if (key == 'C') {
+                return;
+            } else if (key == 'M') {
+                selectMainMenu(inputSource);
+            }
+        }
+    }
+
+    /**
+     * Saves the Game object to file.
      */
     private void saveGame() {
         File file = new File("./save_data.txt");
@@ -122,7 +172,7 @@ public class Engine {
             }
             FileOutputStream fos = new FileOutputStream(file);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(gameHistory.toString());
+            oos.writeObject(game);
         } catch (FileNotFoundException e) {
             System.out.println("file not found");
             System.exit(0);
@@ -133,9 +183,8 @@ public class Engine {
     }
 
     /**
-     * Loads gameHistory from file. If file doesn't exist, opens a notification window and then
-     * returns to main menu.
-     * FIXME: multiple levels fuck-up
+     * Loads Game object from file. If file doesn't exist, opens an error window and returns to
+     * main menu.
      */
     private void loadGame(InputSource inputSource) {
         File file = new File("./save_data.txt");
@@ -144,11 +193,10 @@ public class Engine {
             selectMainMenu(inputSource);
             return;
         }
-        String lastGame = null;
         try {
             FileInputStream fos = new FileInputStream(file);
             ObjectInputStream oos = new ObjectInputStream(fos);
-            lastGame = (String) oos.readObject();
+            game = (Game) oos.readObject();
         } catch (FileNotFoundException e) {
             System.out.println("file not found");
             System.exit(0);
@@ -159,10 +207,7 @@ public class Engine {
             System.out.println("class not found");
             System.exit(0);
         }
-        InputSource lastInput = new StringInputSource(lastGame);
-        long seed = processSeed(lastInput);
-        startNewGame(seed);
-        playGame(lastInput, false);
+        ter.initialize(WIDTH, HEIGHT);
     }
 
     /**
@@ -182,60 +227,21 @@ public class Engine {
 
     /**
      * Returns the next key in uppercase unless it asks to quit ('Q') or quit-save (':Q') the game.
-     * If that's the case, returns 0 (ie. null).
      */
     private char cleanedNextKey(InputSource inputSource) {
         char key = Character.toUpperCase(inputSource.getNextKey());
-        if (key == ':' && inputSource.possibleNextKey()) {
-            char nextKey = Character.toUpperCase(inputSource.getNextKey());
-            if (nextKey == 'Q') {
+        if (key == ':') {
+            almostQuitSave = true;
+        } else if (almostQuitSave) {
+            if (key == 'Q') {
                 quitSaveGame();
+            } else {
+                almostQuitSave = false;
             }
         } else if (key == 'Q') {
             quitGame();
-        } else {
-            return key;
         }
-        return 0;
-    }
-
-    /**
-     * Looks at the next input key and returns it if it's a valid seed input or if it's 'S'.
-     * Otherwise, returns 0 (ie. null).
-     */
-    private char enterSeed(InputSource inputSource) {
-        if (inputSource.possibleNextKey()) {
-            char key = cleanedNextKey(inputSource);
-            if (Character.isDigit(key) || key == 'S') {
-                return key;
-            }
-        }
-        return 0;
-    }
-
-    /**
-     * Processes input keys to get the seed. Makes sure seed value doesn't exceed Java's maximum
-     * integer value (32-bit).
-     * FIXME 35 limit
-     */
-    private long processSeed(InputSource inputSource) {
-        UI.enterSeedWindow("", keyboard);
-        StringBuilder sb = new StringBuilder();
-        while (inputSource.possibleNextKey()) {
-            char key = enterSeed(inputSource);
-            if (Character.isDigit(key) && sb.length() < 35) {
-                sb.append(key);
-                UI.enterSeedWindow(sb.toString(), keyboard);
-            } else if (key == 'S' && sb.length() > 0) {
-                break;
-            }
-        }
-        BigInteger input = new BigInteger(sb.toString());
-        if (input.compareTo(new BigInteger("2147483647")) > 0) {
-            return input.divideAndRemainder(new BigInteger("2147483647"))[1].intValue();
-        } else {
-            return input.intValue();
-        }
+        return key;
     }
 
     /**
@@ -254,7 +260,7 @@ public class Engine {
      */
     public static void main(String[] args) {
         Engine engine = new Engine();
-        engine.interactWithInputString("n3sddasswawwa");
+        engine.interactWithInputString("lddwwasss");
     }
 
 }
