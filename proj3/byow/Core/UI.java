@@ -150,8 +150,6 @@ public class UI {
         }
         if (level == 7 && result == 1) {
             levelResultHelper("☀ You've brought light to the world.", 30, "", 0, Color.WHITE);
-            StdDraw.pause(1000);
-            System.exit(0);
         } else if (result == 1) {
             levelResultHelper("You've passed!", 30, "", 0, Color.WHITE);
         } else {
