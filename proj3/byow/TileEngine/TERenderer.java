@@ -1,9 +1,9 @@
 package byow.TileEngine;
 
+import byow.Core.Engine;
 import edu.princeton.cs.introcs.StdDraw;
 
-import java.awt.Color;
-import java.awt.Font;
+import java.awt.*;
 
 /**
  * Utility class for rendering tiles. You do not need to modify this file. You're welcome
@@ -63,13 +63,13 @@ public class TERenderer {
 
     /**
      * Takes in a 2d array of TETile objects and renders the 2d array to the screen, starting from
-     * xOffset and yOffset.
+     * xOffset and yOffset. Shows head-up display if input level and flowers have real value.
      *
      * If the array is an NxM array, then the element displayed at positions would be as follows,
      * given in units of tiles.
      *
      *              positions   xOffset |xOffset+1|xOffset+2| .... |xOffset+world.length
-     *                     
+     *
      * startY+world[0].length   [0][M-1] | [1][M-1] | [2][M-1] | .... | [N-1][M-1]
      *                    ...    ......  |  ......  |  ......  | .... | ......
      *               startY+2    [0][2]  |  [1][2]  |  [2][2]  | .... | [N-1][2]
@@ -81,9 +81,11 @@ public class TERenderer {
      * This method assumes that the xScale and yScale have been set such that the max x
      * value is the width of the screen in tiles, and the max y value is the height of
      * the screen in tiles.
-     * @param world the 2D TETile[][] array to render
+     * @param world  the 2D TETile[][] array to render
+     * @param level  the current game level (for non-game scenario, this will be -1)
+     * @param flowers  the number of remaining wild flowers (for non-game scenario, this will be -1)
      */
-    public void renderFrame(TETile[][] world) {
+    public void renderFrame(TETile[][] world, int level, int flowers) {
         int numXTiles = world.length;
         int numYTiles = world[0].length;
         StdDraw.clear(new Color(0, 0, 0));
@@ -96,6 +98,49 @@ public class TERenderer {
                 world[x][y].draw(x + xOffset, y + yOffset);
             }
         }
+        if (!(level < 0 || flowers < 0)) {
+            headUpDisplay(world, level, flowers);
+        }
         StdDraw.show();
     }
+
+    /**
+     * Head-up display (HUD): description of the moused-over tile in the upper left corner,
+     * current level and number of remaining wild flowers in the lower left corner, a general
+     * message in the upper middle, and lastly the control menu in the upper right corner.
+     */
+    public void headUpDisplay(TETile[][] world, int level, int flowers) {
+        int x = (int) StdDraw.mouseX();
+        int y = (int) StdDraw.mouseY();
+        String tileDescription = "";
+        if (x < Engine.WIDTH && y < Engine.HEIGHT) {
+            tileDescription = "You see: " + world[x][y].description();
+        }
+        StdDraw.setPenColor(Color.WHITE);
+        StdDraw.setFont(new Font("Monoco", Font.BOLD, 16));
+        StdDraw.textLeft(1.5, 1.5, "LEVEL  " + level);
+        StdDraw.setFont(new Font("Monoco", Font.PLAIN, 16));
+        StdDraw.textLeft(7, 1.5, "wild flowers: " + flowers + " " + "/ 3");
+        StdDraw.textLeft(1.5, 28.5, tileDescription);
+        StdDraw.textRight(Engine.WIDTH - 2, 28.5, "Controls (C)");
+
+        switch (level) {
+            case 1 -> StdDraw.text((float) Engine.WIDTH / 2, 28.5,
+                    "Mouse over to read object's description.");
+            case 2 -> StdDraw.text((float) Engine.WIDTH / 2, 28.5,
+                    "Press (T) to de-activate teleport. Press again to re-activate.");
+            case 3 -> StdDraw.text((float) Engine.WIDTH / 2, 28.5,
+                    "Press (P) to show NPC's projected path. Press again to hide.");
+        }
+    }
+
+    /**
+     * The general Method for 2D tile-based world rendering. Never called in BYOW, just in
+     * labs and demos.
+     * @param world  the 2D TETile[][] array to render
+     */
+    public void renderFrame(TETile[][] world) {
+        renderFrame(world, -1, -1);
+    }
+
 }
