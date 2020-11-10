@@ -67,14 +67,14 @@ public class Engine {
     /**
      * Processes input keys to retrieve the seed. Makes sure seed value doesn't exceed Java's
      * maximum integer value (32-bit). For aesthetic reasons, forbids further entry if it already
-     * has 35 integers (numbers flow out of display window).
+     * has 37 integers (numbers flow out of display window).
      */
     private long processSeed(InputSource inputSource) {
         UI.enterSeedWindow("", keyboard);
         StringBuilder sb = new StringBuilder();
         while (inputSource.possibleNextKey()) {
             char key = cleanedNextKey(inputSource);
-            if (Character.isDigit(key) && sb.length() < 36) {
+            if (Character.isDigit(key) && sb.length() < 38) {
                 sb.append(key);
                 UI.enterSeedWindow(sb.toString(), keyboard);
             } else if (key == 'S' && sb.length() > 0) {
