@@ -1,5 +1,8 @@
 package byow.input;
 
+/**
+ * Based on @author Josh Hug's code.
+ */
 public class StringInputSource implements InputSource {
     private final String input;
     private int index;

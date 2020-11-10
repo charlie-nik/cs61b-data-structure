@@ -2,6 +2,9 @@ package byow.input;
 
 import edu.princeton.cs.introcs.StdDraw;
 
+/**
+ * Based on @author Josh Hug's code.
+ */
 public class KeyboardInputSource implements InputSource{
 
     @Override
