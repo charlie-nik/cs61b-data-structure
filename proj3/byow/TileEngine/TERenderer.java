@@ -120,7 +120,7 @@ public class TERenderer {
         StdDraw.setFont(new Font("Monoco", Font.BOLD, 16));
         StdDraw.textLeft(1.5, 1.5, "LEVEL  " + level);
         StdDraw.setFont(new Font("Monoco", Font.PLAIN, 16));
-        StdDraw.textLeft(7, 1.5, "wild flowers: " + flowers + " " + "/ 3");
+        StdDraw.textLeft(7.1, 1.5, "wild flowers: " + flowers + " " + "/ 3");
         StdDraw.textLeft(1.5, 28.5, tileDescription);
         StdDraw.textRight(Engine.WIDTH - 2, 28.5, "Controls (C)");
 
@@ -131,6 +131,12 @@ public class TERenderer {
                     "Press (T) to de-activate teleport. Press again to re-activate.");
             case 3 -> StdDraw.text((float) Engine.WIDTH / 2, 28.5,
                     "Press (P) to show NPC's projected path. Press again to hide.");
+            default -> {
+                StdDraw.textRight((float) Engine.WIDTH / 2, 28.5, "Teleport (T)    ");
+                StdDraw.textLeft((float) Engine.WIDTH / 2, 28.5, "    NPC's Path (P)");
+                StdDraw.setFont(new Font("Monoco", Font.BOLD, 18));
+                StdDraw.text((float) Engine.WIDTH / 2, 28.5, "||");
+            }
         }
     }
 
